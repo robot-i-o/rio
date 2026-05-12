@@ -252,9 +252,8 @@ def test_lerobot_formatter():
             print("\n✓ Dataset validated successfully!")
             print(f"  - {len(table)} frames")
             print(f"  - {len(table.column_names)} columns")
-            print(
-                f"  - Features: {[c for c in table.column_names if c not in ['timestamp', 'frame_index', 'episode_index', 'index', 'task_index']]}"
-            )
+            meta_cols = {"timestamp", "frame_index", "episode_index", "index", "task_index"}
+            print(f"  - Features: {[c for c in table.column_names if c not in meta_cols]}")
 
             # Print first row to show data format
             print("\nFirst frame sample:")
@@ -303,8 +302,8 @@ def test_lerobot_formatter():
                     print(f"{symbol} {key}: dtype={test_feat['dtype']}, shape={test_feat['shape']}, names={test_feat['names']}")
 
             # Compare parquet columns
-            test_parquet = list((lerobot_dir / "data/chunk-000").glob("*.parquet"))[0]
-            libero_parquet = list((libero_path / "data/chunk-000").glob("*.parquet"))[0]
+            test_parquet = next((lerobot_dir / "data/chunk-000").glob("*.parquet"))
+            libero_parquet = next((libero_path / "data/chunk-000").glob("*.parquet"))
 
             test_cols = set(pq.read_table(test_parquet).column_names)
             libero_cols = set(pq.read_table(libero_parquet).column_names)
@@ -319,7 +318,7 @@ def test_lerobot_formatter():
 
             print("\n✓ Format matches libero dataset structure!")
         else:
-            print(f"ℹ Libero dataset not found at {libero_path}")
+            print(f"Libero dataset not found at {libero_path}")
             print("  Run the libero conversion example to create it for comparison")
     except Exception as e:
         print(f"⚠ Could not compare with libero dataset: {e}")

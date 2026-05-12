@@ -53,7 +53,7 @@ class LeRobotFormatter(Formatter):
         verbose: bool = False,
         only_mapped_keys: bool = True,
         override_existing: bool = False,
-        task: str = None,
+        task: str | None = None,
     ):
         """
         Initialize the LeRobot formatter.
@@ -177,7 +177,8 @@ class LeRobotFormatter(Formatter):
             missing_feature_names = mapped_feature_names - set(robodm_feature_names)
             if missing_feature_names:
                 logger.warning(
-                    f"Mapped feature names not found in trajectory: {missing_feature_names}\n The available features in the dataset are: {robodm_feature_names}"
+                    f"Mapped feature names not found in trajectory: {missing_feature_names}\n"
+                    f" The available features in the dataset are: {robodm_feature_names}"
                 )
 
             selected_robodm_feature_names = [name for name in robodm_feature_names if name in mapped_feature_names]
@@ -261,7 +262,8 @@ class LeRobotFormatter(Formatter):
                 if "task" not in frame_data:
                     if self.task is None:
                         raise ValueError(
-                            "LeRobot dataset requires a 'task' field in each frame or to be passed as a parameter. Please include it in the feature mapping or transforms."
+                            "LeRobot dataset requires a 'task' field in each frame or to be passed as a"
+                            " parameter. Please include it in the feature mapping or transforms."
                         )
                     else:
                         frame_data["task"] = self.task

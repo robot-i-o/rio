@@ -148,7 +148,7 @@ class PolicyInterface(Node):
         while not self.request_queue.empty():
             try:
                 self.request_queue.clear()
-            except:
+            except Exception:
                 break
 
         # Reset the policy if it has a reset method

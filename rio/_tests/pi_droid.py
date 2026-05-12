@@ -5,8 +5,6 @@ try:
     import openpi.models.pi0_config as pi0_config
     import openpi.training.weight_loaders as weight_loaders
     from openpi.policies import policy_config
-    from openpi.shared import download
-    from openpi.training import config as _config
     from openpi.training.config import AssetsConfig, DataConfig, LeRobotDROIDDataConfig, TrainConfig
 
     IMPORT_ERROR = None
@@ -16,7 +14,8 @@ except ImportError as e:
 _test_config = TrainConfig(
     # This config is for fine-tuning pi05-DROID on a custom (smaller) DROID dataset.
     # Here, we use LeRobot data format (like for all other fine-tuning examples)
-    # To convert your custom DROID dataset (<10s of hours) to LeRobot format, see examples/droid/convert_droid_data_to_lerobot.py
+    # To convert your custom DROID dataset (<10s of hours) to LeRobot format, see
+    # examples/droid/convert_droid_data_to_lerobot.py
     name="pi05_droid_finetune_xarm",
     exp_name="pi05_droid_finetune_xarm_exp",
     model=pi0_config.Pi0Config(

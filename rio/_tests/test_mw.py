@@ -66,7 +66,6 @@ class PayloadTest(Node):
         try:
             rate = time.Rate(self.freq)
             self.req_ready_event.set()
-            not_pub_ready = True
             # Clear ring buffer before starting
             # self.ring_buffer.clear()
 

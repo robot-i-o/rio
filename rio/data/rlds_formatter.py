@@ -698,64 +698,68 @@ class {class_name}(tfds.core.GeneratorBasedBuilder):
         # This is a lightweight builder that reads from pre-existing TFRecords
         # The actual data is already in the TFRecord files
         # We just need to parse them
-        
+
         import glob
         import os
-        
+
         # Try multiple locations for the TFRecord files
         # 1. In the dataset root (standard for builder_from_directory)
         # 2. In the version directory (for compatibility)
-        dataset_root = self.data_dir / self.name if hasattr(self.data_dir, '__truediv__') else os.path.join(self.data_dir, self.name)
-        
+        dataset_root = (
+            self.data_dir / self.name
+            if hasattr(self.data_dir, "__truediv__")
+            else os.path.join(self.data_dir, self.name)
+        )
+
         patterns = [
             str(dataset_root) + f'/{{self.name}}-{{split}}.tfrecord-*',
             str(self.data_dir) + f'/{{self.name}}/{{self.name}}-{{split}}.tfrecord-*',
         ]
-        
+
         tfrecord_files = []
         for pattern in patterns:
             tfrecord_files = sorted(glob.glob(pattern))
             if tfrecord_files:
                 break
-        
+
         if not tfrecord_files:
             raise FileNotFoundError(f'No TFRecord files found matching patterns: {{patterns}}')
-        
+
         for tfrecord_file in tfrecord_files:
             dataset = tf.data.TFRecordDataset(tfrecord_file)
             for idx, raw_record in enumerate(dataset):
                 example = tf.train.Example()
                 example.ParseFromString(raw_record.numpy())
-                
+
                 # Parse the example into the expected format
                 parsed = self._parse_example(example)
                 yield f'{{tfrecord_file}}_{{idx}}', parsed
-    
+
     def _parse_example(self, example):
         """Parse a TFRecord example into the expected feature format."""
         features = example.features.feature
-        
+
         # Extract all fields
         result = {{}}
-        
+
         # Episode metadata
         result['episode_metadata'] = {{
             'recording_folderpath': features['episode_metadata/recording_folderpath'].bytes_list.value[0].decode(),
             'file_path': features['episode_metadata/file_path'].bytes_list.value[0].decode(),
         }}
-        
+
         # Scalars and flags
         result['is_first'] = bool(features['is_first'].int64_list.value[0])
         result['is_last'] = bool(features['is_last'].int64_list.value[0])
         result['is_terminal'] = bool(features['is_terminal'].int64_list.value[0])
         result['discount'] = features['discount'].float_list.value[0]
         result['reward'] = features['reward'].float_list.value[0]
-        
+
         # Language instructions
         result['language_instruction'] = features['language_instruction'].bytes_list.value[0].decode()
         result['language_instruction_2'] = features['language_instruction_2'].bytes_list.value[0].decode()
         result['language_instruction_3'] = features['language_instruction_3'].bytes_list.value[0].decode()
-        
+
         # Observation
         result['observation'] = {{}}
         for key in features.keys():
@@ -764,18 +768,17 @@ class {class_name}(tfds.core.GeneratorBasedBuilder):
                 value = features[key].bytes_list.value[0]
                 # Decode based on feature type (this is simplified - production code would need dtype info)
                 result['observation'][obs_key] = value
-        
+
         # Action
         if 'action' in features:
             result['action'] = features['action'].bytes_list.value[0]
-        
+
         # Action dict
         result['action_dict'] = {{}}
         for key in features.keys():
             if key.startswith('action_dict/'):
                 action_key = key.replace('action_dict/', '')
                 result['action_dict'][action_key] = features[key].bytes_list.value[0]
-        
         return result
 '''
         return code

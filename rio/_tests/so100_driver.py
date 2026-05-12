@@ -161,7 +161,8 @@ def main():
             test_result["errors"]["gripper.pos"] = float(actual_gripper - commanded_gripper)
 
             print(
-                f"  gripper.pos: {actual_gripper:>7.2f}% (cmd: {commanded_gripper:>6.1f}%, err: {actual_gripper - commanded_gripper:>6.2f}%)"
+                f"  gripper.pos: {actual_gripper:>7.2f}%"
+                f" (cmd: {commanded_gripper:>6.1f}%, err: {actual_gripper - commanded_gripper:>6.2f}%)"
             )
 
             # Compute end-effector pose

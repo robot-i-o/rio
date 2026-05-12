@@ -162,7 +162,10 @@ def generate_latex_table(experiments: dict[tuple[str, str], list[dict]]) -> str:
         gpu_util_str = f"{metrics['avg_gpu_util']:.1f} $\\pm$ {metrics['std_gpu_util']:.1f}"
         gpu_mem_str = f"{metrics['avg_gpu_mem']:.1f} $\\pm$ {metrics['std_gpu_mem']:.1f}"
 
-        row = f"{robot_display} & {task_display} & {success_rate} & {time_str} & {ram_str} & {cpu_str} & {gpu_util_str} & {gpu_mem_str} \\\\"
+        row = (
+            f"{robot_display} & {task_display} & {success_rate} & {time_str}"
+            f" & {ram_str} & {cpu_str} & {gpu_util_str} & {gpu_mem_str} \\\\"
+        )
         latex.append(row)
 
     # Table footer

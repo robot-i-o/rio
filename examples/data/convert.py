@@ -49,8 +49,8 @@ def convert_to_lerobot(
     # DROID mapping
     feature_mapping = {
         "observation/cameras/camera1/rgb": "exterior_image_1_left",
-        "observation/cameras/camera1/rgb": "exterior_image_2_left",
-        "observation/cameras/camera2/rgb": "wrist_image_left",
+        "observation/cameras/camera2/rgb": "exterior_image_2_left",
+        "observation/cameras/camera3/rgb": "wrist_image_left",
         "observation/proprio_joints": "joint_position",
         "observation/gripper_position": "gripper_position",
         "action": "actions",
@@ -114,7 +114,10 @@ def main():
         "-i",
         type=str,
         default="/tmp/dummy_data/",
-        help="Path to input robodm dataset. For lerobot: single .vla file or directory with multiple .vla files. For rlds: supports glob patterns.",
+        help=(
+            "Path to input robodm dataset. For lerobot: single .vla file or directory with multiple .vla files."
+            " For rlds: supports glob patterns."
+        ),
     )
 
     parser.add_argument(
@@ -122,7 +125,10 @@ def main():
         "-o",
         type=str,
         default=None,
-        help="Output directory for converted dataset. For lerobot format, if not specified, uses ~/.cache/huggingface/lerobot/{repo_id}. For rlds format, uses input path with format suffix.",
+        help=(
+            "Output directory for converted dataset. For lerobot format, if not specified,"
+            " uses ~/.cache/huggingface/lerobot/{repo_id}. For rlds format, uses input path with format suffix."
+        ),
     )
 
     parser.add_argument(

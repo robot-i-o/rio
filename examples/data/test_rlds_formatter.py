@@ -140,7 +140,7 @@ def test_rlds_formatter():
             sys.path.insert(0, str(Path(rlds_path).parent))
 
         # Register the dataset by importing it
-        dataset_module = __import__(Path(rlds_path).name)
+        __import__(Path(rlds_path).name)
 
         # Now load with tfds.builder
         builder2 = tfds.builder("robot_demo", data_dir=str(Path(rlds_path).parent), version="1.0.1")
@@ -216,7 +216,7 @@ def test_rlds_formatter():
         # List what was created
         import os
 
-        for root, dirs, files in os.walk(Path(rlds_path).parent):
+        for root, _dirs, files in os.walk(Path(rlds_path).parent):
             level = root.replace(str(Path(rlds_path).parent), "").count(os.sep)
             indent = " " * 2 * level
             print(f"{indent}{os.path.basename(root)}/")
