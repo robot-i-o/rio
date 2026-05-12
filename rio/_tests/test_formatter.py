@@ -15,6 +15,8 @@ import robodm
 
 from rio.data import LeRobotFormatter
 
+lerobot = pytest.importorskip("lerobot", reason="lerobot not installed")
+
 rng = np.random.default_rng()
 
 
