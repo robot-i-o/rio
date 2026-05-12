@@ -24,7 +24,7 @@ requires-python = ">=3.10"
 #TODO: change git reference to main.
 dependencies = [
     "loguru>=0.7.3",
-    "rio_hw[all] @ git+ssh://git@github.com/robot-i-o/rio-hw.git@main",
+    "rio_hw[all] @ git+https://github.com/robot-i-o/rio-hw.git@main",
     "robodm>=0.1.0",
     "av<=13.1.0",    # required by robodm for proper encoding/decoding
 ]
