@@ -3,6 +3,8 @@
 
 from loguru import logger
 
+from .gear_sonic import GearSonicClient, GearSonicServer
+from .gear_sonic_planner import GearSonicPlannerClient, GearSonicPlannerServer
 from .policy_interface import PolicyInterfaceClient, PolicyInterfaceServer
 
 try:
@@ -18,7 +20,9 @@ except ImportError:
     Pi0 = None
 
 __all__ = [
+    "GearSonic",
+    "GearSonicPlanner",
     "PolicyInterface",
 ]
 
-__policies__ = ["SmolVLA", "Pi0", "Dummy"]
+__policies__ = ["SmolVLA", "Pi0", "Dummy", "GearSonic", "GearSonicPlanner"]

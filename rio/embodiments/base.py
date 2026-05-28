@@ -16,6 +16,7 @@ ObsType = TypeVar("ObsType", bound="Observation")
 class EmbodimentType(Enum):
     SINGLE_ARM = auto()
     BIMANUAL = auto()
+    HUMANOID = auto()
 
 
 class BaseEmbodiment(ABC, Generic[ObsType]):
