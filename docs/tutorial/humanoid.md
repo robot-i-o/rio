@@ -50,25 +50,26 @@ Run tethered full-body humanoid control through a re-implementation of [GEAR-SON
         sudo dpkg -i XRoboToolkit-PC-Service_1.0.0_ubuntu_24.04_amd64.deb
 - Install Python bindings for XRobotToolkit from GEAR-SONIC
 
+        export CMAKE_PREFIX_PATH="$(python -m pybind 11 --cmakedir)"
         uv pip install --no-build-isolation -e third_party/GR00T-WholeBodyControl/external_dependencies/XRoboToolkit-PC-Service-Pybind_X86_and_ARM64
 
 
 ### Setup XRoboToolkit on the Pico 4 Ultra
 
-- Install [adb](developer.android.com/studio/releases/platform-tools) on your PC if it is not already installed.
+- Install [adb](https://developer.android.com/studio/releases/platform-tools) on your PC if it is not alredy installed
 - [Enable developer mode](https://developer.picoxr.com/ja/document/unreal/test-and-build/) on Pico 4 Ultra
-- Download [XRoboToolkit-PICO-1.1.1.apk](https://github.com/XR-Robotics/XRoboToolkit-Unity-Client/releases/download/v1.1.1/XRoboToolkit-PICO-1.1.1.apk) on your PC.
-- To install onto the Pico, run
-
-        adb install -g XRoboToolkit-PICO-1.1.1.apk
+- Download [XRoboToolkit-PICO-1.1.1.apk](https://github.com/XR-Robotics/XRoboToolkit-Unity-Client/releases/download/v1.1.1/XRoboToolkit-PICO-1.1.1.apk) on your PC
 - Connect your headset to your PC using a USB cable and run
 
-        # Find the PICO device ID
+        # Install XRoboToolkit on Pico
+        adb install -g XRoboToolkit-PICO-1.1.1.apk
+
+        # Find the Pico device ID
         adb devices
         # Setup reverse tethering using ADB
         adb reverse tcp:63901 tcp:63901
 
-- Put on your headset and calibrate your motion trackers.
+- Put on your headset and calibrate your motion trackers
 - Open the app, and do the following steps:
     - Next to **PC Service:**, press the **Enter** button and input `127.0.0.1`
     - Under **Tracking**, enable **Head** and **Controller**.
@@ -78,7 +79,7 @@ Run tethered full-body humanoid control through a re-implementation of [GEAR-SON
     - Under **Data & Control** enable **Send**
 
 ### Setup Unitree G1 Interface
-- Power on your Unitree G1 and connect it to your PC using an ethernet cable. 
+- Power on your Unitree G1 and connect it to your PC using an ethernet cable
 - Set a static IP on the same subnet as the G1  
 
         # find the robot-facing ethernet interface (typically enp* or eth0)
@@ -102,8 +103,8 @@ Run tethered full-body humanoid control through a re-implementation of [GEAR-SON
 - Put on the **Pico 4 Ultra** again and recalibrate/reconnect.
 - Run the script, wait for the policies to load, then press **Enter** to go to initial position.
 - Lower the gantry until the robot leans slightly forward
-- Press **Enter** to engage the controller.
-- Move to mirror the standing position of the robot, then press **B** on the right Pico controller to start full-body tracking.
-- Press **A** at any time to pause tracking, and **B** to resume.
-- Press **X** on the left controller at any time to kill the process.
+- Press **Enter** to engage the controller
+- Move to mirror the standing position of the robot, then press **B** on the right Pico controller to start full-body tracking
+- Press **A** at any time to pause tracking, and **B** to resume
+- Press **X** on the left controller at any time to kill the process
 
