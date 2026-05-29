@@ -98,25 +98,26 @@ nav:
 
   - Quick Start: quickstart.md
 
-  - Tutorial:
-    - tutorial/index.md
+  - Workflow:
+    - workflow/index.md
     - Setup:
-      - Station Configuration: tutorial/station_cfg.md
-    - Collect Data: 
-      - Collect Demonstrations: tutorial/data-collection.md
-      - Visualize Data: tutorial/rerun.md
+      - Station Configuration: workflow/station_cfg.md
+    - Collect Data:
+      - Collect Demonstrations: workflow/data-collection.md
+      - Visualize Data: workflow/rerun.md
     - Convert Data:
-      - Convert to DROID: tutorial/data-export.md
+      - Convert to DROID: workflow/data-export.md
     - Policy Training:
-      - Setup: tutorial/pi0_setup.md
-      - Pi0.5 DROID Fine-tuning: tutorial/pi0_droid_finetuning.md
+      - Setup: workflow/pi0_setup.md
+      - Pi0.5 DROID Fine-tuning: workflow/pi0_droid_finetuning.md
     - Deploy:
-      - Policy Inference: tutorial/deploy.md
+      - Policy Inference: workflow/deploy.md
 
   # - Hardware: '!import git@github.com:robot-i-o/rio-hw.git?branch=main&docs_dir=docs/' # TODO: fix in rio-hw
 
-  - Reference:
-    - Ubuntu RT Setup: reference/ubuntu.md
+  - Setup Tutorials:
+    - Humanoid Control: setup-tutorials/humanoid.md
+    - Ubuntu RT Setup: setup-tutorials/ubuntu.md
 
   - Contributing:
     - Guide: CONTRIBUTING.md

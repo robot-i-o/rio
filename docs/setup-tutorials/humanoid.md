@@ -56,7 +56,7 @@ Run tethered full-body humanoid control through a re-implementation of [GEAR-SON
 
 ### Setup XRoboToolkit on the Pico 4 Ultra
 
-- Install [adb](https://developer.android.com/studio/releases/platform-tools) on your PC if it is not alredy installed
+- Install [adb](https://developer.android.com/studio/releases/platform-tools) on your PC if it is not already installed
 - [Enable developer mode](https://developer.picoxr.com/ja/document/unreal/test-and-build/) on Pico 4 Ultra
 - Download [XRoboToolkit-PICO-1.1.1.apk](https://github.com/XR-Robotics/XRoboToolkit-Unity-Client/releases/download/v1.1.1/XRoboToolkit-PICO-1.1.1.apk) on your PC
 - Connect your headset to your PC using a USB cable and run
