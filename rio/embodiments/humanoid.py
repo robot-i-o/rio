@@ -73,10 +73,10 @@ class Humanoid(BaseEmbodiment):
         """Build humanoid observation."""
         state = self.humanoid.get_state()
 
-        q = state.get("q", None)
-        dq = state.get("dq", None)
-        quaternion = state.get("quaternion", None)
-        gyroscope = state.get("gyroscope", None)
+        q = state.get("joint_q", None)
+        dq = state.get("joint_qd", None)
+        quaternion = state.get("imu_quat", None)
+        gyroscope = state.get("imu_gyro", None)
 
         obs = HumanoidObs(
             proprio=q,

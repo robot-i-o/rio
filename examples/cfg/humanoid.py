@@ -11,14 +11,14 @@ class G1Station:
     humanoid: str = "UnitreeG1"
     humanoid_cfg: NodeCfg | None = field(
         default_factory=lambda: NodeCfg(
-            network_interface="enx9c69d33c49cc",
+            robot_iface="enx9c69d33c49cc",
             motor_kp=KPS,
             motor_kd=KDS,
             freq=200,
         )
     )
 
-    teleop: str | None = None
+    teleop: str | None = "XRobotoolkit"
     teleop_cfg: NodeCfg | None = field(
         default_factory=lambda: NodeCfg(
             enable_body_tracking=True,

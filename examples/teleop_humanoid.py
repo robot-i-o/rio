@@ -17,7 +17,7 @@ class MujocoSimClient:
         xml_path: str = "third_party/GR00T-WholeBodyControl/decoupled_wbc/control/robot_model/model_data/g1/scene_29dof.xml",
         motor_kp: tuple | None = None,
         motor_kd: tuple | None = None,
-        network_interface: str = "",
+        robot_iface: str = "",
         freq: int = 200,
     ):
         self.num_joints = 29
@@ -67,10 +67,10 @@ class MujocoSimClient:
         gyroscope = self.mj_data.qvel[3:6].copy()
 
         return {
-            "q": qpos_j,
-            "dq": qvel_j,
-            "quaternion": quaternion,
-            "gyroscope": gyroscope,
+            "joint_q": qpos_j,
+            "joint_qd": qvel_j,
+            "imu_quat": quaternion,
+            "imu_gyro": gyroscope,
         }
 
     def moveJ(self, action: list | np.ndarray, t_cmd_target: float) -> None:
