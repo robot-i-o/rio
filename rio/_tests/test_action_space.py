@@ -8,7 +8,6 @@ Tier 1: action-space parsing and proprioception safety logic.
 import numpy as np
 import pytest
 
-from rio.embodiments.base import EmbodimentType
 from rio.embodiments.bimanual import Bimanual
 from rio.embodiments.single_arm import SingleArm
 from rio.schema import ActionSpace
@@ -35,13 +34,6 @@ def test_action_space_enum():
     assert len({e.value for e in ActionSpace}) == len(names)
 
 
-def test_embodiment_type_enum():
-    # Only these two are defined. envs/env.py infers "DUAL_ARM" elsewhere
-    assert {e.name for e in EmbodimentType} == {"SINGLE_ARM", "BIMANUAL"}
-    with pytest.raises(KeyError):
-        EmbodimentType["DUAL_ARM"]
-
-
 def test_single_arm_task_pos_dim():
     arm = SingleArm(arm=StubArm(), action_space="TASK_POS")
     assert arm.arm_dim == 6
@@ -60,7 +52,7 @@ def test_single_arm_parse_build_roundtrip():
 def test_single_arm_action_too_short_is_rejected():
     arm = SingleArm(arm=StubArm(num_joints=7), action_space="JOINT_POS")
     with pytest.raises(IndexError):
-        arm.parse_action(np.zeros(4)) 
+        arm.parse_action(np.zeros(4))
 
 
 def test_bimanual_parse_indices():

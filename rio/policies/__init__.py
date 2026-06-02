@@ -3,6 +3,14 @@
 
 from loguru import logger
 
+try:
+    from .gear_sonic import GearSonicClient, GearSonicServer
+except ImportError:
+    logger.debug("GearSonic not available (missing torch or gear_sonic package)")
+    GearSonicClient = None
+    GearSonicServer = None
+
+from .gear_sonic_planner import GearSonicPlannerClient, GearSonicPlannerServer
 from .policy_interface import PolicyInterfaceClient, PolicyInterfaceServer
 
 try:
@@ -18,7 +26,9 @@ except ImportError:
     Pi0 = None
 
 __all__ = [
+    "GearSonic",
+    "GearSonicPlanner",
     "PolicyInterface",
 ]
 
-__policies__ = ["SmolVLA", "Pi0", "Dummy"]
+__policies__ = ["SmolVLA", "Pi0", "Dummy", "GearSonic", "GearSonicPlanner"]

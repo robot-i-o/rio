@@ -34,7 +34,7 @@ Pick the config in `examples/cfg/` closest to your hardware and update the hardw
 !!! note
     The example scripts select the station via the `STATION` environment variable (e.g. `STATION=Xarm7EEFStation`). This resolves the class name from `examples/cfg/__init__.py` at startup.
 
-See [Station Configuration](tutorial/station_cfg.md) for the full field reference and how to compose your own station from scratch.
+See [Station Configuration](workflow/station_cfg.md) for the full field reference and how to compose your own station from scratch.
 
 ---
 
@@ -88,6 +88,7 @@ On startup the script checks that the leader joints are aligned with the followe
 | `Xarm7GelloStation` | `examples/cfg/xarm_gello.py` | Leader-follower (Gello) | `teleop_leader_follower` |
 | `SO100Station` | `examples/cfg/so100.py` | Leader-follower (SO100) | `teleop_leader_follower` |
 | `BimanualSO100Station` | `examples/cfg/bimanual_so100.py` | Leader-follower bimanual | `teleop_leader_follower` |
+| `G1Station` | `examples/cfg/humanoid.py` | Humanoid whole-body (XRobotoolkit) | `teleop_humanoid` |
 
 ---
 
@@ -116,4 +117,4 @@ STATION=Xarm7EEFStation uv run -m examples.teleop_eef \
     --freq 30
 ```
 
-Recordings are saved as `.vla` files to `recorder_cfg.path`. See [Collect Demonstrations](tutorial/data-collection.md) for replay, conversion, and next steps.
+Recordings are saved as `.vla` files to `recorder_cfg.path`. See [Collect Demonstrations](workflow/data-collection.md) for replay, conversion, and next steps.

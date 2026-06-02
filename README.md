@@ -18,7 +18,7 @@ This project provides a Python-based interface to use different robot arms (Fran
 Tested on Ubuntu 22.04 LTS with an optional real-time kernel patch. See [`docs/ubuntu.md`](docs/ubuntu.md) for setup instructions.
 
 ```bash
-git clone git@github.com:cmubig/rio.git
+git clone git@github.com:robot-i-o/rio.git
 
 # install open-pi
 cd rio
@@ -39,5 +39,6 @@ uv sync --all-extras
 Build and browse the docs locally at http://localhost:8000:
 
 ```bash
+uv sync --group docs
 uv run mkdocs serve
 ```

@@ -83,18 +83,18 @@ RIO is split into two packages:
 - [**RIO**](https://github.com/robot-i-o/rio) — utilities and abstractions for robot learning: data collection, format conversion, policy interfaces, and orchestration.
 - [**RIO_HW**](https://github.com/robot-i-o/rio-hw) — backend code and hardware interfaces: real-time control loops, driver bindings, and communication middleware.
 
-Everything is wired together through a **station config** which is a Python dataclass that declares every node in your setup (arms, grippers, cameras, recorders, policy servers). See [Station Configuration](tutorial/station_cfg.md) for details.
+Everything is wired together through a **station config** which is a Python dataclass that declares every node in your setup (arms, grippers, cameras, recorders, policy servers). See [Station Configuration](workflow/station_cfg.md) for details.
 
 ---
 
 ## Installation
 !!! note "Recommended System Setup"
     RIO should work on any *Linux* system.
-    For replicating exact tested setup, see [Ubuntu RT Setup](reference/ubuntu.md) for instructions.
+    For replicating exact tested setup, see [Ubuntu RT Setup](setup-tutorials/ubuntu.md) for instructions.
     
 ```bash
 # clone the repo
-git clone git@github.com:cmubig/rio.git
+git clone git@github.com:robot-i-o/rio.git
 cd rio
 
 # install openpi (third-party policy server)
@@ -110,13 +110,3 @@ uv venv --python 3.10
 source .venv/bin/activate
 uv sync --all-extras
 ```
-
-<!-- ## Next Steps
-
-| I want to…                          | Go to                                                      |
-|-------------------------------------|-----------------------------------------------------------|
-| Install RIO and run my first example | [Installation](get-started/installation.md)                |
-| Understand the full workflow         | [Tutorial Overview](tutorials/workflow.md)                 |
-| Set up my hardware station           | [Station Configuration](concepts/station-config.md)        |
-| Fine-tune a policy on my data        | [pi0 Fine-tuning](tutorials/pi0-finetune.md)              |
-| Contribute to the project            | [Contributing Guide](contributing/guide.md)                | -->

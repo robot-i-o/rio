@@ -1,4 +1,4 @@
-# Tutorial Overview
+# Workflow
 
 RIO supports the full robot learning workflow — from collecting demonstrations on real hardware to deploying a fine-tuned policy. The diagram below shows how the pieces fit together.
 
@@ -16,7 +16,7 @@ flowchart LR
 
 ### 1. Setup
 
-[Configure Station](../tutorial/station_cfg.md)
+[Configure Station](station_cfg.md)
 
 All examples are driven by a **station config**: a Python dataclass that declares every hardware and software node in your setup (robot arm, gripper, cameras, recorder, policy server).
 
@@ -26,7 +26,7 @@ Each config lives in `examples/cfg/` as a self-contained file (e.g. `xarm_eef.py
 
 ### 2. Collect Data
 
-[Teleoperate the Robot](../tutorial/data-collection.md) and [Visualize Data](../tutorial/visualization/rerun.md)
+[Teleoperate the Robot](data-collection.md) and [Visualize Data](visualization/rerun.md)
 
 Use a teleoperation script to control the robot and record demonstrations. RIO supports several input devices:
 
@@ -43,7 +43,7 @@ Run `uv run -m examples.cfg` to list all registered stations. Set `STATION=<Clas
 
 ### 3. Convert Data
 
-[Exporting Data](../tutorial/data-export.md)
+[Exporting Data](data-export.md)
 
 Convert the recorded `.vla` trajectories to [LeRobot](https://github.com/huggingface/lerobot) / DROID format for use with the openpi training pipeline.
 
@@ -55,7 +55,7 @@ uv run examples/data/convert_to_lerobot_droid.py --input /data/rollouts/my_task/
 
 ### 4. Fine-tune
 
-[PI0.5 DROID Fine-tuning](../tutorial/pi0_droid_finetuning.md)
+[PI0.5 DROID Fine-tuning](pi0_droid_finetuning.md)
 
 Fine-tune a pi0 policy on your collected dataset using the openpi training pipeline.
 
@@ -63,7 +63,7 @@ Fine-tune a pi0 policy on your collected dataset using the openpi training pipel
 
 ### 5. Deploy 
 
-[Run Policy Inference](../tutorial/deploy.md)
+[Run Policy Inference](deploy.md)
 
 Run the fine-tuned policy on the robot in a closed-loop at a fixed frequency.
 

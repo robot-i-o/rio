@@ -47,6 +47,11 @@ You don't need to touch anything else to get started.
 | `examples/cfg/xarm_gello.py` | `Xarm7GelloStation` | `examples.teleop_leader_follower` |
 | `examples/cfg/so100.py` | `SO100Station` | `examples.teleop_leader_follower` |
 | `examples/cfg/bimanual_so100.py` | `BimanualSO100Station` | `examples.teleop_leader_follower` |
+| `examples/cfg/humanoid.py` | `G1Station` | `examples.teleop_humanoid` |
+
+!!! note "Humanoid extra setup required"
+    `G1Station` requires additional hardware, policy models, and dependencies before running.
+    See [Humanoid Control](../setup-tutorials/humanoid.md) for the full setup guide.
 
 Run `uv run -m examples.cfg` to see all registered station classes.
 
