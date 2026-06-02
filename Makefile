@@ -11,23 +11,23 @@ check: format type
 
 .PHONY: test
 test:
-	uv run --extra dev pytest
+	uv run pytest
 
 .PHONY: test-unit
 test-unit:
-	uv run --extra dev pytest -m unit
+	uv run pytest -m unit
 
 .PHONY: test-integration
 test-integration:
-	uv run --extra dev pytest -m integration
+	uv run pytest -m integration
 
 .PHONY: test-gpu
 test-gpu:
-	uv run --extra dev pytest -m gpu
+	uv run pytest -m gpu
 
 .PHONY: test-hardware
 test-hardware:
-	uv run --extra dev pytest -m hardware
+	uv run pytest -m hardware
 
 .PHONY: build
 build:
