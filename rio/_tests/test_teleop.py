@@ -22,6 +22,7 @@ class FakeKeyboard:
 
 class FakeStick:
     """Spacemouse or gamepad stand in"""
+
     def __init__(self, motion=None, buttons=()):
         self._motion = np.zeros(6) if motion is None else np.asarray(motion, float)
         self._buttons = set(buttons)
@@ -60,7 +61,7 @@ def test_interface_poll_dispatch_matches_direct():
 
 def test_spacemouse_buttons():
     _, gripper, _, _ = Interface.poll_spacemouse(FakeStick(buttons=[0]), 0.0, 0.0, TeleopMode.TRANSLATION)
-    assert gripper == 0.0 
+    assert gripper == 0.0
     _, gripper, _, _ = Interface.poll_spacemouse(FakeStick(buttons=[1]), 0.0, 0.0, TeleopMode.TRANSLATION)
     assert gripper == 1.0
 

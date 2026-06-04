@@ -28,6 +28,7 @@ class MujocoSimClient:
     def __enter__(self):
         import mujoco
         import mujoco.viewer
+
         from rio.policies.gear_sonic import DEFAULT_ANGLES
 
         logger.info(f"Loading MuJoCo model from {self.xml_path}...")

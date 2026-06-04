@@ -11,10 +11,17 @@ from rio_hw import time
 from rio_hw.middleware import ClientFactory, ServerFactory
 from rio_hw.node import Node
 from rio_hw.request import Request
-from scipy.interpolate import interp1d
-from scipy.spatial.transform import Rotation as R
-from scipy.spatial.transform import Slerp
 from threadpoolctl import threadpool_limits
+
+try:
+    from scipy.interpolate import interp1d
+    from scipy.spatial.transform import Rotation as R
+    from scipy.spatial.transform import Slerp
+
+    SCIPY_IMPORT_ERROR = None
+except ImportError as e:
+    interp1d = R = Slerp = None
+    SCIPY_IMPORT_ERROR = e
 
 try:
     import onnxruntime as ort
@@ -50,6 +57,8 @@ class SonicPlanner:
     def load(self, model_path: str, providers: list[str] | None = None):
         if ORT_IMPORT_ERROR is not None:
             raise ImportError("onnxruntime is required to run the kinematic planner.") from ORT_IMPORT_ERROR
+        if SCIPY_IMPORT_ERROR is not None:
+            raise ImportError("scipy is required to run the kinematic planner.") from SCIPY_IMPORT_ERROR
 
         sess_options = ort.SessionOptions()
         self.session = ort.InferenceSession(model_path, sess_options, providers=providers)
@@ -162,6 +171,8 @@ class GearSonicPlanner(Node):
     ):
         if ORT_IMPORT_ERROR is not None:
             raise ImportError("onnxruntime is required for GearSonicPlanner.") from ORT_IMPORT_ERROR
+        if SCIPY_IMPORT_ERROR is not None:
+            raise ImportError("scipy is required for GearSonicPlanner.") from SCIPY_IMPORT_ERROR
 
         self.model_dir = model_dir
         self.freq = freq
@@ -274,12 +285,12 @@ class GearSonicPlanner(Node):
                                 if key in req.params:
                                     planner_inputs[key] = req.params[key]
 
-                    if planner_inputs["mode"] == 2: # runnning
+                    if planner_inputs["mode"] == 2:  # running
                         replan_interval = 0.1
-                    elif planner_inputs["mode"] in [8, 14]: # crawling
+                    elif planner_inputs["mode"] in [8, 14]:  # crawling
                         replan_interval = 0.2
                     else:
-                        replan_interval = 1.0 
+                        replan_interval = 1.0
 
                     planner.replan(planner_inputs)
                     motion_data = planner.get_motion_data()

@@ -30,7 +30,7 @@ def test_arm_api_unchanged():
 
 
 def test_gripper_api_unchanged():
-    assert callable(getattr(Gripper, "moveG"))
+    assert callable(Gripper.moveG)
 
 
 def test_node_api_unchanged():

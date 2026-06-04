@@ -1,18 +1,26 @@
 # SPDX-FileCopyrightText: 2026 RIO Developers
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
 import os
 import queue
 import traceback
 
 import numpy as np
-import scipy.spatial.transform as st
-import torch
 from loguru import logger
 from rio_hw import time
 from rio_hw.middleware import ClientFactory, ServerFactory
 from rio_hw.node import Node
 from threadpoolctl import threadpool_limits
+
+try:
+    import scipy.spatial.transform as st
+
+    SCIPY_IMPORT_ERROR = None
+except ImportError as e:
+    st = None
+    SCIPY_IMPORT_ERROR = e
 
 try:
     import onnxruntime as ort
@@ -23,6 +31,7 @@ except ImportError as e:
 
 try:
     import gear_sonic
+    import torch
     from gear_sonic.scripts.pico_manager_thread_server import compute_from_body_poses
     from gear_sonic.trl.utils import torch_transform
     from gear_sonic.trl.utils.rotation_conversion import decompose_rotation_aa
@@ -173,6 +182,8 @@ class GearSonic(Node):
     ):
         if ORT_IMPORT_ERROR is not None:
             raise ImportError("onnxruntime is required to run GearSonic.") from ORT_IMPORT_ERROR
+        if SCIPY_IMPORT_ERROR is not None:
+            raise ImportError("scipy is required to run GearSonic.") from SCIPY_IMPORT_ERROR
         self.freq = freq
         self.model_dir = model_dir
         self.last_timestamp = time.now()
