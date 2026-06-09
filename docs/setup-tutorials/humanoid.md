@@ -17,37 +17,54 @@ Run tethered full-body humanoid control through a re-implementation of [GEAR-SON
 - USB-C cable
 
 ## Setup Policy Requirements
-- Install `git-lfs` if it's not already installed
 
-        sudo apt install git-lfs && git lfs install
+The script `scripts/setup/humanoid/gearsonic_setup.sh` automates this section —
+git-lfs, the GR00T-WholeBodyControl clone, model download, the `gear_sonic`
+module, and onnxruntime. Run it from the repo root:
 
-- Install models and assets from GEAR-SONIC
+    # CUDA 12.X
+    bash scripts/setup/humanoid/gearsonic_setup.sh
 
-        mkdir third_party
-        cd third_party
+    # CUDA 13.X
+    bash scripts/setup/humanoid/gearsonic_setup.sh --cuda13
 
-        # Download GEAR-SONIC codebase
-        git clone https://github.com/NVlabs/GR00T-WholeBodyControl.git
-        cd GR00T-WholeBodyControl
-        git lfs pull
+After it finishes, continue with [Setup Teleoperation](#setup-teleoperation) and
+[Setup Unitree G1 Interface](#setup-unitree-g1-interface) below, which are still
+manual. The individual policy steps are documented below for reference.
 
-        # Download models
-        uv pip install huggingface_hub
-        python download_from_hf.py
+??? note "Manual policy setup — automated by `gearsonic_setup.sh`"
 
-        # Import gear_sonic module (used for SMPL processing)
-        cd gear_sonic
-        uv pip install -e .
+    - Install `git-lfs` if it's not already installed
 
-- Install ONNX for your CUDA version
+            sudo apt install git-lfs && git lfs install
 
-        # CUDA 12.X
-        uv pip install onnxruntime-gpu
-        # CUDA 13.X
-        uv pip install coloredlogs flatbuffers numpy packaging protobuf sympy
-        uv pip install --pre --index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ort-cuda-13-nightly/pypi/simple/ onnxruntime-gpu
+    - Install models and assets from GEAR-SONIC
 
-        python -c "import onnxruntime as ort; ort.get_available_providers()"
+            mkdir third_party
+            cd third_party
+
+            # Download GEAR-SONIC codebase
+            git clone https://github.com/NVlabs/GR00T-WholeBodyControl.git
+            cd GR00T-WholeBodyControl
+            git lfs pull
+
+            # Download models
+            uv pip install huggingface_hub
+            python download_from_hf.py
+
+            # Import gear_sonic module (used for SMPL processing)
+            cd gear_sonic
+            uv pip install -e .
+
+    - Install ONNX for your CUDA version
+
+            # CUDA 12.X
+            uv pip install onnxruntime-gpu
+            # CUDA 13.X
+            uv pip install coloredlogs flatbuffers numpy packaging protobuf sympy
+            uv pip install --pre --index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ort-cuda-13-nightly/pypi/simple/ onnxruntime-gpu
+
+            python -c "import onnxruntime as ort; ort.get_available_providers()"
 
 ## Setup Teleoperation
 
@@ -64,7 +81,7 @@ Run tethered full-body humanoid control through a re-implementation of [GEAR-SON
 - Open the XRoboToolkit-PC-Service application
 - Install Python bindings for XRobotToolkit from GEAR-SONIC
 
-        export CMAKE_PREFIX_PATH="$(python -m pybind 11 --cmakedir)"
+        export CMAKE_PREFIX_PATH="$(python -m pybind11 --cmakedir)"
         uv pip install --no-build-isolation -e third_party/GR00T-WholeBodyControl/external_dependencies/XRoboToolkit-PC-Service-Pybind_X86_and_ARM64
 
 
