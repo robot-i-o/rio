@@ -28,10 +28,6 @@ module, and onnxruntime. Run it from the repo root:
     # CUDA 13.X
     bash scripts/setup/humanoid/gearsonic_setup.sh --cuda13
 
-After it finishes, continue with [Setup Teleoperation](#setup-teleoperation) and
-[Setup Unitree G1 Interface](#setup-unitree-g1-interface) below, which are still
-manual. The individual policy steps are documented below for reference.
-
 ??? note "Manual policy setup — automated by `gearsonic_setup.sh`"
 
     - Install `git-lfs` if it's not already installed
