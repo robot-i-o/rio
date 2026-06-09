@@ -25,7 +25,13 @@ done
 
 GROOT_DIR="third_party/GR00T-WholeBodyControl"
 
+# Resolve the rio project interpreter so every install and run targets the same
+# .venv, regardless of an active conda env. Run from the repo root (never cd into
+# a subdir) so uv resolves this project rather than creating a throwaway venv.
+PROJECT_PY="$(uv run python -c 'import sys; print(sys.executable)')"
+
 echo "Starting GEAR-SONIC policy setup..."
+echo "Using project interpreter: $PROJECT_PY"
 echo "==================================="
 
 echo "[1/5] Installing git-lfs..."
@@ -41,28 +47,27 @@ if [ ! -d "$GROOT_DIR" ]; then
 else
     echo "$GROOT_DIR already exists, skipping clone."
 fi
-(cd "$GROOT_DIR" && git lfs pull)
+git -C "$GROOT_DIR" lfs pull
 
 echo "[3/5] Downloading models from Hugging Face..."
-uv pip install huggingface_hub
-(cd "$GROOT_DIR" && uv run python download_from_hf.py)
+uv pip install --python "$PROJECT_PY" huggingface_hub
+# download_from_hf.py writes relative to its own location, so no cd is needed.
+uv run python "$GROOT_DIR/download_from_hf.py"
 
 echo "[4/5] Installing gear_sonic module (editable)..."
-uv pip install -e "$GROOT_DIR/gear_sonic"
+uv pip install --python "$PROJECT_PY" -e "$GROOT_DIR/gear_sonic"
 
 if [ "$CUDA13" = true ]; then
     echo "[5/5] Installing onnxruntime-gpu (CUDA 13.x nightly)..."
-    uv pip install coloredlogs flatbuffers numpy packaging protobuf sympy
-    uv pip install --pre \
+    uv pip install --python "$PROJECT_PY" coloredlogs flatbuffers numpy packaging protobuf sympy
+    uv pip install --python "$PROJECT_PY" --pre \
         --index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ort-cuda-13-nightly/pypi/simple/ \
         onnxruntime-gpu
 else
     echo "[5/5] Installing onnxruntime-gpu (CUDA 12.x)..."
-    uv pip install onnxruntime-gpu
+    uv pip install --python "$PROJECT_PY" onnxruntime-gpu
 fi
 uv run python -c "import onnxruntime as ort; print('ONNX providers:', ort.get_available_providers())"
 
 echo "==================================="
 echo "GEAR-SONIC policy setup complete."
-echo "Next, complete the teleoperation and Unitree G1 interface setup manually"
-echo "(see the Humanoid Control tutorial)."
