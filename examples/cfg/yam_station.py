@@ -19,27 +19,7 @@ class YamStation:
                 enable_depth=False,
                 resolution=(480, 640),
                 resolution_depth=(480, 640),
-            ),
-            # Left camera: Realsense D415
-            "left": Camera(
-                addr="127.0.0.1:5130",
-                cam_type="Realsense",
-                serial="346522060488",
-                model="D400",
-                enable_depth=False,
-                resolution=(480, 640),
-                resolution_depth=(480, 640),
-            ),
-            # Right camera: Realsense D415
-            "right": Camera(
-                addr="127.0.0.1:5130",
-                cam_type="Realsense",
-                serial="347322062075",
-                model="D400",
-                enable_depth=False,
-                resolution=(480, 640),
-                resolution_depth=(480, 640),
-            ),
+            )
         }
     )
 
@@ -78,9 +58,9 @@ class YamStation:
     action_space: str = "JOINT_POS"
     embodiment_type: str = "SINGLE_ARM"
 
-    instruction: str = ""
+    instruction: str = "Pick up the plushie"
     visualizer: str | None = None
     visualizer_cfg: VisualizerCfg = field(default_factory=VisualizerCfg)
 
-    # recorder: str | None = "Recorder"
-    # recorder_cfg: RecorderCfg = field(default_factory=lambda: RecorderCfg(path=f"data/{TASK}/"))
+    recorder: str | None = "Recorder"
+    recorder_cfg: RecorderCfg = field(default_factory=lambda: RecorderCfg(path=f"data/{TASK}/"))
