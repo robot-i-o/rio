@@ -17,14 +17,39 @@ pytestmark = pytest.mark.unit
 
 class StubArm:
     # Minimal arm client stand-in (no IPC, no hardware)
-    integrated_gripper = False
-
     def __init__(self, num_joints=7, state=None):
         self.num_joints = num_joints
         self._state = state or {}
 
     def get_state(self):
         return self._state
+
+
+class RecordingArm(StubArm):
+    """Arm stub that records command calls. Exposes moveG -> integrated gripper."""
+
+    def __init__(self, num_joints=7, state=None):
+        super().__init__(num_joints=num_joints, state=state)
+        self.calls = []
+
+    def moveJ(self, target_joint_q, target_time):
+        self.calls.append(("moveJ", list(target_joint_q), target_time))
+
+    def moveG(self, target_pos, target_time):
+        self.calls.append(("moveG", list(target_pos), target_time))
+
+
+class RecordingGripper:
+    """Dedicated gripper client stub that records moveG calls."""
+
+    def __init__(self):
+        self.calls = []
+
+    def get_state(self):
+        return {"gripper_position": 0.0}
+
+    def moveG(self, target_pos, target_time):
+        self.calls.append(("moveG", list(target_pos), target_time))
 
 
 def test_action_space_enum():
@@ -84,3 +109,41 @@ def test_bimanual_valid_proprio_is_concatenated():
 
     obs = arm.get_obs(cams={})
     assert obs.proprio.shape == (14,)
+
+
+def test_integrated_gripper_commanded_via_arm_moveG():
+    """An arm exposing moveG drives its own gripper; moveJ gets joints only."""
+    stub = RecordingArm(num_joints=6)
+    robot = SingleArm(arm=stub, action_space="JOINT_POS")
+    assert robot._gripper is stub  # integrated gripper resolved to the arm
+
+    action = robot.build_action(np.arange(6.0), gripper_cmd=0.5)
+    robot.move(action, t_cmd_target=1.0)
+
+    moveg = [c for c in stub.calls if c[0] == "moveG"]
+    movej = [c for c in stub.calls if c[0] == "moveJ"]
+    assert moveg == [("moveG", [0.5], 1.0)]
+    # moveJ receives only the 6 joints, no appended gripper element.
+    assert len(movej) == 1
+    np.testing.assert_array_equal(movej[0][1], np.arange(6.0))
+
+
+def test_explicit_gripper_client_wins_over_arm_moveG():
+    """A dedicated gripper client takes precedence even if the arm has moveG."""
+    stub = RecordingArm(num_joints=6)
+    gripper = RecordingGripper()
+    robot = SingleArm(arm=stub, gripper=gripper, action_space="JOINT_POS")
+    assert robot._gripper is gripper
+
+    action = robot.build_action(np.arange(6.0), gripper_cmd=0.5)
+    robot.move(action, t_cmd_target=1.0)
+
+    assert gripper.calls == [("moveG", [0.5], 1.0)]
+    # Arm only receives joints; its own moveG is untouched.
+    assert [c[0] for c in stub.calls] == ["moveJ"]
+
+
+def test_no_gripper_when_arm_lacks_moveG():
+    """A plain arm (no moveG, no client) resolves to no gripper controller."""
+    robot = SingleArm(arm=StubArm(num_joints=6), action_space="JOINT_POS")
+    assert robot._gripper is None

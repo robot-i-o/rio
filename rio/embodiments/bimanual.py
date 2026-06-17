@@ -48,21 +48,10 @@ class Bimanual(BaseEmbodiment):
         self.hand2 = hand2
         self.action_space = ActionSpace[action_space]
 
-        # Check for integrated grippers
-        self.integrated_gripper1 = getattr(self.arm1, "integrated_gripper", False)
-        self.integrated_gripper2 = getattr(self.arm2, "integrated_gripper", False)
-
-        assert not (self.gripper1 is not None and self.integrated_gripper1), (
-            "Cannot have both gripper1 client and integrated gripper on arm1."
-        )
-        assert not (self.gripper2 is not None and self.integrated_gripper2), (
-            "Cannot have both gripper2 client and integrated gripper on arm2."
-        )
-
-        if self.integrated_gripper1:
-            logger.warning("Using integrated gripper on arm1; gripper commands will be appended to arm1 commands.")
-        if self.integrated_gripper2:
-            logger.warning("Using integrated gripper on arm2; gripper commands will be appended to arm2 commands.")
+        # Resolve the node that owns each gripper channel (explicit client, else the
+        # arm itself when it exposes moveG). Commanded via moveG in all cases.
+        self._gripper1 = self._resolve_gripper(self.arm1, self.gripper1)
+        self._gripper2 = self._resolve_gripper(self.arm2, self.gripper2)
 
         # Get number of joints for each arm dynamically
         self.arm1_num_joints = self._get_num_joints(self.arm1)
@@ -121,9 +110,8 @@ class Bimanual(BaseEmbodiment):
         # Execute arm1
         self._move_single_arm(
             self.arm1,
-            self.gripper1,
+            self._gripper1,
             self.hand1,
-            self.integrated_gripper1,
             arm1_cmd,
             gripper1_cmd,
             hand1_cmd,
@@ -134,9 +122,8 @@ class Bimanual(BaseEmbodiment):
         # Execute arm2
         self._move_single_arm(
             self.arm2,
-            self.gripper2,
+            self._gripper2,
             self.hand2,
-            self.integrated_gripper2,
             arm2_cmd,
             gripper2_cmd,
             hand2_cmd,
@@ -144,28 +131,10 @@ class Bimanual(BaseEmbodiment):
             binarize_gripper,
         )
 
-    def _move_single_arm(
-        self, arm, gripper, hand, integrated_gripper, arm_cmd, gripper_cmd, hand_cmd, t_cmd_target, binarize_gripper
-    ):
+    def _move_single_arm(self, arm, gripper, hand, arm_cmd, gripper_cmd, hand_cmd, t_cmd_target, binarize_gripper):
         """Helper to move a single arm with gripper and hand"""
-        if binarize_gripper and gripper_cmd is not None:
-            gripper_cmd = gripper_cmd if gripper_cmd > 0.5 else gripper_cmd - 0.1
-
-        arm_cmd = arm_cmd.tolist()
-
-        if gripper is not None and gripper_cmd is not None:
-            gripper.moveG([gripper_cmd], t_cmd_target)
-        elif integrated_gripper and gripper_cmd is not None:
-            arm_cmd = [*arm_cmd, gripper_cmd]
-
-        if self.action_space == ActionSpace.TASK_POS:
-            arm.moveL(arm_cmd, t_cmd_target)
-        elif self.action_space == ActionSpace.JOINT_POS:
-            arm.moveJ(arm_cmd, t_cmd_target)
-        elif self.action_space == ActionSpace.JOINT_VEL:
-            arm.speedJ(arm_cmd, t_cmd_target)
-        else:
-            raise NotImplementedError(f"Action space {self.action_space} not implemented")
+        self._dispatch_gripper(gripper, gripper_cmd, t_cmd_target, binarize=binarize_gripper)
+        self._dispatch_arm(arm, arm_cmd, t_cmd_target)
 
         if hand is not None and hand_cmd is not None:
             hand.moveJ(hand_cmd.tolist(), t_cmd_target)
@@ -210,7 +179,7 @@ class Bimanual(BaseEmbodiment):
             state["arm1"]["arm"] = self.arm1.get_state()
             if self.gripper1:
                 state["arm1"]["gripper"] = self.gripper1.get_state()
-            elif self.integrated_gripper1:
+            elif self._gripper1 is self.arm1:
                 state["arm1"]["gripper"] = {"gripper_position": state["arm1"]["arm"].get("gripper_position", 0.0)}
 
             if self.hand1:
@@ -220,7 +189,7 @@ class Bimanual(BaseEmbodiment):
             state["arm2"]["arm"] = self.arm2.get_state()
             if self.gripper2:
                 state["arm2"]["gripper"] = self.gripper2.get_state()
-            elif self.integrated_gripper2:
+            elif self._gripper2 is self.arm2:
                 state["arm2"]["gripper"] = {"gripper_position": state["arm2"]["arm"].get("gripper_position", 0.0)}
 
             if self.hand2:

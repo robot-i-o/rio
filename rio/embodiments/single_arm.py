@@ -38,12 +38,10 @@ class SingleArm(BaseEmbodiment):
         self.hand = hand
         self.action_space = ActionSpace[action_space]
 
-        self.integrated_gripper = getattr(self.arm, "integrated_gripper", False)
-        assert not (self.gripper is not None and self.integrated_gripper), (
-            "Cannot have both gripper client and integrated gripper."
-        )
-        if self.integrated_gripper:
-            logger.warning("Using integrated gripper; gripper commands will be appended to arm commands.")
+        # Resolve the node that owns the gripper channel (explicit client, else the
+        # arm itself when it exposes moveG). Commanded via moveG in all cases.
+        self._gripper = self._resolve_gripper(self.arm, self.gripper)
+
         self.urdf_path = kwargs.get("urdf_path", "")
         self.__obs_schema__ = SingleArmObs
 
@@ -61,30 +59,13 @@ class SingleArm(BaseEmbodiment):
         t_cmd_target: float,
         binarize_gripper: bool = False,
     ):
-        # arm_cmd = arm_cmd.tolist()
-        parse_action = self.parse_action(actions)
+        parsed = self.parse_action(actions)
 
-        arm_cmd = parse_action["arm_cmd"]
-        gripper_cmd = parse_action["gripper_cmd"]
-        hand_cmd = parse_action["hand_cmd"]
+        self._dispatch_gripper(self._gripper, parsed["gripper_cmd"], t_cmd_target, binarize=binarize_gripper)
+        self._dispatch_arm(self.arm, parsed["arm_cmd"], t_cmd_target)
 
-        if self.gripper is not None and gripper_cmd is not None:
-            self.gripper.moveG([gripper_cmd], t_cmd_target)
-        elif self.integrated_gripper and gripper_cmd is not None:
-            arm_cmd = [*arm_cmd, gripper_cmd]
-
-        if self.action_space == ActionSpace.TASK_POS:
-            self.arm.moveL(arm_cmd, t_cmd_target)
-        elif self.action_space == ActionSpace.JOINT_POS:
-            self.arm.moveJ(arm_cmd, t_cmd_target)
-        elif self.action_space == ActionSpace.JOINT_VEL:
-            self.arm.speedJ(arm_cmd, t_cmd_target)
-        else:
-            raise NotImplementedError(f"Action space {self.action_space} not implemented in Robot.move()")
-
-        # TODO: migrate using parse actions
-        if self.hand is not None and hand_cmd is not None:
-            self.hand.moveJ(hand_cmd.tolist(), t_cmd_target)
+        if self.hand is not None and parsed["hand_cmd"] is not None:
+            self.hand.moveJ(parsed["hand_cmd"].tolist(), t_cmd_target)
 
     def _get_num_joints(self, arm: Client) -> int:
         if hasattr(arm, "num_joints"):
@@ -148,7 +129,8 @@ class SingleArm(BaseEmbodiment):
         if "gripper" in robot_state.keys():
             gripper_pos = robot_state["gripper"].get("gripper_position", None)
         else:
-            gripper_pos = 0.0
+            # Integrated gripper: position is published in the arm state.
+            gripper_pos = robot_state["arm"].get("gripper_position", 0.0)
 
         default_proprio = eef_pose if self.action_space == "EEF_POSE" else joint_q
         default_proprio = np.concatenate([default_proprio, [gripper_pos]])

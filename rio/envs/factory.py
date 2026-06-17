@@ -13,6 +13,32 @@ from attrs import has as attrs_has
 from ..cfg.node import NodeCfg
 from ..embodiments.base import EmbodimentType
 
+# Modules that live in the `rio` package; every other module is sourced from `rio_hw`.
+_RIO_PACKAGE_MODULES = {"policies", "visualization", "data"}
+
+
+def _resolve_module(field_name):
+    """Map a station-config field name to its default node module.
+
+    Args:
+        field_name: Name of the field on the station config (e.g. "teleop_arm").
+
+    Returns:
+        The module name the node should be imported from.
+    """
+    if field_name.startswith("teleop"):
+        return "interfaces"
+    if field_name == "visualizer":
+        return "visualization"
+    if field_name == "recorder":
+        return "data"
+    return "robots"
+
+
+def _resolve_package(module):
+    """Pick the package a module is sourced from."""
+    return "rio" if module in _RIO_PACKAGE_MODULES else "rio_hw"
+
 
 def dataclass_to_dict(dc):
     """Convert a dataclass to a dictionary, handling nested dataclasses."""
@@ -136,23 +162,9 @@ def instantiate_station_cfg(args, **kwargs) -> tuple[dict, dict, dict]:
                 cfg_dict = cfg.__dict__
             else:
                 cfg_dict = cfg
-            package = "rio_hw"
-            if hasattr(args, module_override_key):
-                module = getattr(args, module_override_key)
-                package = "rio"
-            elif module_override_key in kwargs:
-                module = kwargs[module_override_key]
-                package = "rio"
-            elif field_name.startswith("teleop"):
-                module = "interfaces"
-            elif field_name == "visualizer":
-                module = "visualization"
-                package = "rio"
-            elif field_name == "recorder":
-                module = "data"
-                package = "rio"
-            else:
-                module = "robots"
+
+            module = kwargs.get(module_override_key) or _resolve_module(field_name)
+            package = _resolve_package(module)
 
         else:
             continue
