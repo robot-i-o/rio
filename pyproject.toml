@@ -53,6 +53,7 @@ docs = [
 # This removes version constraints from transitive dependencies
 [tool.uv]
 override-dependencies = ["numpy", "rerun-sdk", "av<=13.1.0"]
+build-constraint-dependencies = ["scikit-build-core<0.10"] #ruckig 0.15.3 uses the deprecated `cmake.targets`, which scikit-build-core >= 0.10 rejects
 
 [tool.setuptools.packages.find]
 include = ["rio*", "examples*"]
