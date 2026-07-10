@@ -18,6 +18,11 @@ from ..embodiments.base import EmbodimentType
 _RIO_PACKAGE_MODULES = {"policies", "visualization", "data"}
 
 
+def _is_sensor_field(field_name: str) -> bool:
+    """Return whether a station field represents a sensor node."""
+    return field_name == "sensor" or field_name.endswith("_sensor")
+
+
 def _resolve_module(field_name):
     """Map a station-config field name to its default node module.
 
@@ -33,6 +38,8 @@ def _resolve_module(field_name):
         return "visualization"
     if field_name == "recorder":
         return "data"
+    if _is_sensor_field(field_name):
+        return "sensors"
     return "robots"
 
 

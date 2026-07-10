@@ -33,6 +33,7 @@ dependencies = [
 rio-list-stations = "rio._scripts.list_available:list_stations"
 rio-list-robots = "rio._scripts.list_available:list_robots"
 rio-list-cameras = "rio._scripts.list_available:list_cameras"
+rio-list-sensors = "rio._scripts.list_available:list_sensors"
 rio-list-interfaces = "rio._scripts.list_available:list_interfaces"
 
 [project.optional-dependencies]

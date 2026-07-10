@@ -26,14 +26,22 @@ def dict_to_step(data: dict[str, Any], embodiment_type: EmbodimentType = Embodim
 
     observation = {}
     cameras = defaultdict(dict)
+    sensors = defaultdict(dict)
     for k, v in data.items():
-        if k.startswith("observation/") and not k.startswith("observation/cameras/"):
-            observation[k.split("/")[1]] = v
         if k.startswith("observation/cameras/"):
             cam_name = k.split("/")[2]
             cam_input = k.split("/")[3]
             cameras[cam_name][cam_input] = v
+        elif k.startswith("observation/sensors/"):
+            parts = k.split("/")
+            if len(parts) >= 4:
+                sensor_name = parts[2]
+                sensor_input = "/".join(parts[3:])
+                sensors[sensor_name][sensor_input] = v
+        elif k.startswith("observation/"):
+            observation[k.split("/")[1]] = v
     observation["cameras"] = {name: Camera(**cam_data) for name, cam_data in cameras.items()}
+    observation["sensors"] = {name: dict(sensor_data) for name, sensor_data in sensors.items()}
 
     observation = ObsClass(**observation)
     step = Step(

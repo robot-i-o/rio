@@ -25,5 +25,9 @@ def list_cameras() -> None:
     _list("rio_hw.cameras", "cameras")
 
 
+def list_sensors() -> None:
+    _list("rio_hw.sensors", "sensors")
+
+
 def list_interfaces() -> None:
     _list("rio_hw.interfaces", "interfaces")
