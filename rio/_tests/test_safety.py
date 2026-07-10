@@ -9,6 +9,7 @@ slow or hasn't produced anything yet.
 """
 
 import multiprocessing as mp
+import socket
 import time
 
 import numpy as np
@@ -27,7 +28,13 @@ ACTION_DIM = 7
 CHUNK = 8
 
 
-def _kwargs():
+def _shm_addr():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return f"127.0.0.1:{sock.getsockname()[1]}"
+
+
+def _kwargs(shm_addr):
     return {
         "policy": Dummy(action_dim=ACTION_DIM, chunk_size=CHUNK),
         "instruction": "test",
@@ -38,6 +45,7 @@ def _kwargs():
         "freq": 50,
         "max_buffer_size": 30,
         "camera_keys": ["camera_1"],
+        "shm_addr": shm_addr,
     }
 
 
@@ -49,7 +57,7 @@ def _obs():
 
 
 def test_gap_returns_safe_default_then_recovers():
-    kw = _kwargs()
+    kw = _kwargs(_shm_addr())
     server = lambda: PolicyInterfaceServer(MW, **kw)
     client = lambda: PolicyInterfaceClient(MW, **kw)
 
@@ -77,7 +85,7 @@ def test_gap_returns_safe_default_then_recovers():
 
 
 def test_get_action_chunk_never_blocks():
-    kw = _kwargs()
+    kw = _kwargs(_shm_addr())
     server = lambda: PolicyInterfaceServer(MW, **kw)
     client = lambda: PolicyInterfaceClient(MW, **kw)
 
