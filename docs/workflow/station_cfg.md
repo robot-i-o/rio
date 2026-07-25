@@ -77,6 +77,7 @@ The factory uses a **field + field_cfg** naming convention; the **module** is
 | `gripper`, `gripper1` | `gripper_cfg`, `gripper1_cfg` | `robots` |
 | `visualizer` | `visualizer_cfg` | `visualization` |
 | `recorder` | `recorder_cfg` | `data` |
+| `*_sensor` | `*_sensor_cfg` | `sensors` |
 | `teleop_*` | `teleop_*_cfg` | `interfaces` |
 | `policy` | `policy_cfg`, `policy_node_cfg` | `policies` |
 
@@ -101,6 +102,24 @@ cameras: dict[str, Camera] = field(
     }
 )
 ```
+
+## Sensors
+Sensor nodes follow the same field + config pattern as robots. Name the field with a `_sensor` suffix so the factory resolves it from `rio_hw.sensors`:
+
+```python
+from rio.cfg import NodeCfg
+
+ft_sensor: str | None = "AtiFt"
+ft_sensor_cfg: NodeCfg = field(
+    default_factory=lambda: NodeCfg(
+        host="192.168.1.1",
+        freq=100,
+        bias_on_start=True,
+    )
+)
+```
+
+Sensor states are stored under `step.observation.sensors`, keyed by the station field name. For example, the config above records `observation/sensors/ft_sensor/force` and `observation/sensors/ft_sensor/torque`.
 
 ## Minimal Example
 

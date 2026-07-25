@@ -8,7 +8,7 @@ from loguru import logger
 from rio_hw import time
 
 from ..schema import Camera, Step
-from .factory import get_mbody_components, instantiate_station_cfg
+from .factory import _is_sensor_field, get_mbody_components, instantiate_station_cfg
 
 
 class Env:
@@ -21,6 +21,7 @@ class Env:
         self._exit_stack = None
         self.robot = None
         self.cameras: dict = {}
+        self.sensors: dict = {}
         self.kwargs = kwargs
         self.instruction = kwargs.get("instruction", "")
         self.start_time = None
@@ -72,6 +73,11 @@ class Env:
             if client_factory is not None:
                 self.cameras[key] = self._exit_stack.enter_context(client_factory())
 
+        # Sensors
+        for key, client_factory in self._clients.items():
+            if key not in components and _is_sensor_field(key) and client_factory is not None:
+                self.sensors[key] = self._exit_stack.enter_context(client_factory())
+
         # Visualizer
         self.visualizer = self.get_client("visualizer")
 
@@ -81,6 +87,7 @@ class Env:
             self._exit_stack = None
             self.robot = None
             self.cameras = {}
+            self.sensors = {}
             self.visualizer = None
 
     def reset(self):
@@ -89,6 +96,7 @@ class Env:
     def get_state(self, action: np.ndarray | None = None, use_relative_time: bool = True) -> Step:
         cams = self.get_cameras()
         obs = self.robot.get_obs(cams)
+        obs.sensors = self.get_sensors()
 
         if use_relative_time:
             _timestamp = time.now() - self.start_time
@@ -130,6 +138,14 @@ class Env:
                 depth=state.get("depth"),
                 meta=meta,
             )
+        return obs
+
+    def get_sensors(self) -> dict[str, dict]:
+        obs = {}
+        for key, sensor in self.sensors.items():
+            state = sensor.get_state()
+            if state is not None:
+                obs[key] = state
         return obs
 
     def __enter__(self):

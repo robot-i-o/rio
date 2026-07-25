@@ -26,6 +26,7 @@ class Camera:
 class Observation:
     proprio: np.ndarray  # Defaults to policy action space
     cameras: dict[str, Camera] = field(default_factory=dict)
+    sensors: dict[str, dict] = field(default_factory=dict)
 
 
 @dataclass

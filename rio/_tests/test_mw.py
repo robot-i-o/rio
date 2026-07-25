@@ -4,6 +4,7 @@
 import multiprocessing as mp
 import queue
 import random
+import socket
 import unittest
 from enum import Enum, auto
 
@@ -133,12 +134,29 @@ def payload_client_factory(middleware, **kwargs):
     return ClientFactory(middleware, PayloadTest, **kwargs)
 
 
+def middleware_kwargs(middleware, addr, verbose, timeout, freq):
+    kwargs = {"verbose": verbose, "timeout": timeout, "freq": freq}
+    if middleware == "Shm":
+        kwargs["shm_addr"] = addr
+    elif middleware != "Thread":
+        kwargs["addr"] = addr
+    return kwargs
+
+
 def create_server_fn(middleware, addr, verbose, timeout, freq):
-    return lambda: payload_server_factory(middleware, addr=addr, verbose=verbose, timeout=timeout, freq=freq)
+    kwargs = middleware_kwargs(middleware, addr, verbose, timeout, freq)
+    return lambda: payload_server_factory(middleware, **kwargs)
 
 
 def create_client_fn(middleware, addr, verbose, timeout, freq):
-    return lambda: payload_client_factory(middleware, addr=addr, verbose=verbose, timeout=timeout, freq=freq)
+    kwargs = middleware_kwargs(middleware, addr, verbose, timeout, freq)
+    return lambda: payload_client_factory(middleware, **kwargs)
+
+
+def unused_addr():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return f"127.0.0.1:{sock.getsockname()[1]}"
 
 
 class TestMiddleware(unittest.TestCase):
@@ -146,9 +164,6 @@ class TestMiddleware(unittest.TestCase):
         self.middlewares = ["Zenoh", "Shm", "Thread", "Portal", "ZeroRpc"]
         self.freq = 50
         self.seed = 42
-        self._host = "127.0.0.1"
-        self._port = 7447
-        self.addr = f"{self._host}:{self._port}"
         self.verbose = False
         self.timeout = 1.0
 
@@ -159,8 +174,9 @@ class TestMiddleware(unittest.TestCase):
 
     def _test_simple_msg(self, middleware):
         """Send simple messages through the middleware"""
-        server_fn = create_server_fn(middleware, self.addr, self.verbose, self.timeout, self.freq)
-        client_fn = create_client_fn(middleware, self.addr, self.verbose, self.timeout, self.freq)
+        addr = unused_addr()
+        server_fn = create_server_fn(middleware, addr, self.verbose, self.timeout, self.freq)
+        client_fn = create_client_fn(middleware, addr, self.verbose, self.timeout, self.freq)
 
         with ServerManager(middleware, [server_fn]):
             with client_fn() as payload:

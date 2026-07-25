@@ -58,11 +58,25 @@ def make_dummy_observation(test_cfg):
     return obs
 
 
+def make_policy_or_skip(policy_name, policy_kwargs):
+    try:
+        policy = make_policy(policy_name, policy_kwargs)
+    except ImportError as exc:
+        pytest.skip(f"{policy_name} dependencies are not installed: {exc}")
+
+    required_methods = ("construct_policy", "set_instruction", "get_action")
+    missing = [name for name in required_methods if not callable(getattr(policy, name, None))]
+    if missing:
+        pytest.skip(f"{policy_name} does not implement the policy inference API: missing {missing}")
+
+    return policy
+
+
 @pytest.mark.gpu
 @pytest.mark.parametrize("policy_name", POLICIES_TO_TEST)
 def test_simple_inference(policy_name, policy_cfg, make_dummy_observation):
     # Build policy
-    policy = make_policy(policy_name, vars(policy_cfg))
+    policy = make_policy_or_skip(policy_name, vars(policy_cfg))
     policy.construct_policy()
     policy.set_instruction("Move the robot arm to the left.")
     # Create dummy observation

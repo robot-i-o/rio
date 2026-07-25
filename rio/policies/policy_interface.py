@@ -33,6 +33,7 @@ class PolicyInterface(Node):
         max_buffer_size: int = 30,
         chunk_request_threshold: float = 0.75,
         camera_keys: list[str] | None = None,
+        **kwargs,
     ):
         self.policy = policy
         self.instruction = instruction
@@ -47,16 +48,16 @@ class PolicyInterface(Node):
         self.chunk_request_threshold = chunk_request_threshold
         self.camera_keys = camera_keys
 
-        super().__init__()
+        super().__init__(freq=freq, max_buffer_size=max_buffer_size, **kwargs)
 
     # NOTE: Defines request/pub schemas in post_init following other constructors
     def __post_init__(self):
-        if len(self.camera_keys) != len(self.resolutions):
-            logger.error("Length of camera_keys must match length of resolutions")
-            raise ValueError("Length of camera_keys must match length of resolutions")
         if self.camera_keys is None:
             logger.warning("camera_keys is None, defaulting to camera_1, camera_2, ...")
             self.camera_keys = [f"camera_{i + 1}" for i in range(len(self.resolutions))]
+        if len(self.camera_keys) != len(self.resolutions):
+            logger.error("Length of camera_keys must match length of resolutions")
+            raise ValueError("Length of camera_keys must match length of resolutions")
 
         obs_schema = {"proprio": np.zeros(shape=(self.proprio_dim,), dtype=np.float32)}
         for i, resolution in enumerate(self.resolutions):
