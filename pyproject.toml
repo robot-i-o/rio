@@ -36,6 +36,7 @@ rio-list-cameras = "rio._scripts.list_available:list_cameras"
 rio-list-interfaces = "rio._scripts.list_available:list_interfaces"
 
 [project.optional-dependencies]
+dev = ["pytest", "pytest-xdist"]
 visualizers = ["rerun-sdk", "mujoco", "robot_descriptions", "rerun-loader-mjcf"]
 
 [dependency-groups]

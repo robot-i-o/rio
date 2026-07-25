@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
+import socket
 import time
 from dataclasses import dataclass
 
@@ -36,6 +37,7 @@ class PolicyInterfaceConfig:
     instruction: str = "Move the robot arm to the left."
     resolutions: list[tuple[int, int]] = None
     action_dim: int = 6
+    proprio_dim: int = 6
     chunk_size: int = 50
     use_rtc: bool = False
     freq: int = 100
@@ -84,12 +86,32 @@ def make_dummy_observation(test_cfg):
     return obs
 
 
+def shm_addr():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return f"127.0.0.1:{sock.getsockname()[1]}"
+
+
+def make_policy_or_skip(policy_name, policy_kwargs):
+    try:
+        policy = make_policy(policy_name, policy_kwargs)
+    except ImportError as exc:
+        pytest.skip(f"{policy_name} dependencies are not installed: {exc}")
+
+    required_methods = ("construct_policy", "set_instruction", "inference")
+    missing = [name for name in required_methods if not callable(getattr(policy, name, None))]
+    if missing:
+        pytest.skip(f"{policy_name} does not implement the policy interface API: missing {missing}")
+
+    return policy
+
+
 @pytest.mark.gpu
 @pytest.mark.integration
 @pytest.mark.parametrize("policy_name", POLICIES_TO_TEST)
 def test_policy_interface(policy_name, policy_cfg, policy_interface_cfg, test_cfg, make_dummy_observation):
     # 1. Instantiate policy wrapper
-    policy = make_policy(policy_name, vars(policy_cfg))
+    policy = make_policy_or_skip(policy_name, vars(policy_cfg))
 
     # 2. Instantiate policy node (server and client factories)
     policy_interface_kwargs = {
@@ -97,10 +119,13 @@ def test_policy_interface(policy_name, policy_cfg, policy_interface_cfg, test_cf
         "instruction": policy_interface_cfg.instruction,
         "resolutions": policy_interface_cfg.resolutions,
         "action_dim": policy_interface_cfg.action_dim,
+        "proprio_dim": policy_interface_cfg.proprio_dim,
         "chunk_size": policy_interface_cfg.chunk_size,
         "use_rtc": policy_interface_cfg.use_rtc,
         "freq": policy_interface_cfg.freq,
         "max_buffer_size": policy_interface_cfg.max_buffer_size,
+        "camera_keys": [f"camera{i + 1}" for i in range(test_cfg.num_cams)],
+        "shm_addr": shm_addr(),
     }
 
     server = lambda: PolicyInterfaceServer(test_cfg.mw, **policy_interface_kwargs)

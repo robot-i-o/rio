@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2026 RIO Developers
 # SPDX-License-Identifier: Apache-2.0
 
+import re
 from contextlib import ExitStack, contextmanager
 from dataclasses import asdict, is_dataclass
 from dataclasses import fields as dataclass_fields
@@ -51,8 +52,23 @@ def dataclass_to_dict(dc):
     return result
 
 
+def _module_name_from_class_name(class_name: str) -> str:
+    """Convert a PascalCase class name to its snake_case module name."""
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", class_name).lower()
+
+
 def make_policy(policy_name, policy_kwargs):
-    module = import_module(f"rio.policies.{policy_name.lower()}")
+    module_names = [policy_name.lower(), _module_name_from_class_name(policy_name)]
+    for module_name in dict.fromkeys(module_names):
+        try:
+            module = import_module(f"rio.policies.{module_name}")
+            break
+        except ModuleNotFoundError as exc:
+            if exc.name != f"rio.policies.{module_name}":
+                raise
+    else:
+        raise ImportError(policy_name)
+
     PolicyClass = getattr(module, policy_name)
     if PolicyClass is None:
         raise ImportError(policy_name)
