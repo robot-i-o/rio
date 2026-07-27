@@ -10,7 +10,6 @@ from .yam_station import YamStation
 __all__ = [
     "BimanualSO100Station",
     "BimanualYamStation",
-    "CameraStation",
     "G1Station",
     "SO100Station",
     "Xarm7EEFStation",
