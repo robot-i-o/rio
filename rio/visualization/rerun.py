@@ -68,6 +68,44 @@ def _log_field(value, path: str):
         rr.log(path, rr.Scalars(float(value)))
 
 
+_warned_depth_units: set[str] = set()
+
+
+def _depth_image_kwargs(
+    entity_path: str,
+    depth_units: float | None,
+    depth_range: tuple[float, float] | None = None,
+    colormap: str = "viridis",
+) -> dict:
+    """Build ``rr.DepthImage`` keyword arguments for a raw depth map.
+
+    Rerun expects both ``meter`` and ``depth_range`` in the native units of the depth
+    array, so the metric colormap range is converted using the camera depth units. A
+    camera that does not report its depth units gets neither: the depth map is logged
+    unscaled and Rerun estimates the colormap range from the data.
+
+    Args:
+        entity_path: Entity path the depth map is logged to, used to warn only once per camera
+        depth_units: Size of one depth unit in meters (e.g. 0.001 for millimeter depth)
+        depth_range: Colormap range in meters, or None to let Rerun estimate it
+        colormap: Rerun colormap used to display the depth map
+
+    Returns:
+        Keyword arguments to pass to ``rr.DepthImage``.
+    """
+    if not depth_units:
+        if entity_path not in _warned_depth_units:
+            _warned_depth_units.add(entity_path)
+            logger.warning(f"No depth units reported for {entity_path}, logging depth unscaled.")
+        return {"colormap": colormap}
+
+    meter = 1.0 / depth_units
+    kwargs: dict = {"colormap": colormap, "meter": meter}
+    if depth_range is not None:
+        kwargs["depth_range"] = (depth_range[0] * meter, depth_range[1] * meter)
+    return kwargs
+
+
 class RequestType(Enum):
     # Configuration requests
     SET_TIME_SEQUENCE = auto()
@@ -77,6 +115,7 @@ class RequestType(Enum):
     CONFIGURE_ENTITY = auto()
     # Data logging requests
     LOG_IMAGE = auto()
+    LOG_DEPTH = auto()
     LOG_ARRAY = auto()
     LOG_TRAJECTORY = auto()
     LOG_FRAME = auto()
@@ -88,6 +127,7 @@ class RequestType(Enum):
 
 RR_TYPE_MAP = {
     RequestType.LOG_IMAGE: (lambda: rr.Image, "image"),
+    RequestType.LOG_DEPTH: (lambda: rr.DepthImage, "depth"),
     RequestType.LOG_ARRAY: (lambda: rr.Tensor, "array"),
     RequestType.LOG_SCALAR: (lambda: rr.Scalars, "value"),
     RequestType.LOG_POINTS3D: (lambda: rr.Points3D, "points"),
@@ -97,6 +137,7 @@ RR_TYPE_MAP = {
 class RerunVisualizer(Node):
     __api__ = [
         "log_image",
+        "log_depth",
         "log_array",
         "log_trajectory",
         "log_frame",
@@ -200,7 +241,11 @@ class RerunVisualizer(Node):
                 # Handle each request
                 for req_raw in reqs:
                     req = Request(RequestType(req_raw.pop("type")), req_raw["data"])
-                    self._handle_request(req)
+                    try:
+                        self._handle_request(req)
+                    except Exception as e:
+                        # Keep visualizing: one malformed request should not take down the node
+                        logger.opt(exception=True).error(f"Error handling {req.type.name} request: {e}")
 
                 # Update time
                 rr.set_time("frame_idx", sequence=frame_count)
@@ -335,6 +380,10 @@ class RerunVisualizer(Node):
                     f"{cam_path}/rgb",
                     rr.Image(camera.rgb, color_model=rr.ColorModel.RGB).compress(jpeg_quality=self.rgb_quality),
                 )
+            if camera.depth is not None:
+                depth_path = f"{cam_path}/depth"
+                depth_units = (camera.meta or {}).get("depth_units")
+                rr.log(depth_path, rr.DepthImage(camera.depth, **_depth_image_kwargs(depth_path, depth_units)))
         # Observation
         log_obs(obs, entity_path=robot_path)
 
@@ -385,6 +434,35 @@ class RerunVisualizer(Node):
         req = {
             "type": RequestType.LOG_IMAGE.value,
             "data": {"entity_path": entity_path, "image": image, "color_model": color_model},
+        }
+        self.request_queue.put(req)
+
+    def log_depth(
+        self,
+        entity_path: str,
+        depth: np.ndarray,
+        depth_units: float | None,
+        depth_range: tuple[float, float] | None = None,
+        colormap: str = "viridis",
+    ):
+        """
+        Log a depth image.
+
+        Args:
+            entity_path: Entity path for the depth image
+            depth: Depth array (H, W) in raw sensor units
+            depth_units: Size of one depth unit in meters (e.g. 0.001 for millimeter depth).
+                Cameras that do not report it log the depth unscaled and warn
+            depth_range: Colormap range in meters, or None to let Rerun estimate it
+            colormap: Rerun colormap used to display the depth map
+        """
+        req = {
+            "type": RequestType.LOG_DEPTH.value,
+            "data": {
+                "entity_path": entity_path,
+                "depth": depth,
+                **_depth_image_kwargs(entity_path, depth_units, depth_range, colormap),
+            },
         }
         self.request_queue.put(req)
 
