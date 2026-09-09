@@ -8,6 +8,7 @@ TASK = "pick_and_place"
 
 @dataclass
 class BimanualYamStation:
+
     # Left follower YAM arm (receives joint commands)
     arm1: str = "YamArm"
     arm1_cfg: NodeCfg | None = field(

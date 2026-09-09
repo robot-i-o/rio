@@ -25,10 +25,17 @@ except ImportError:
     logger.debug("Pi0 not available. Install deps via scripts/setup/vla/pi0_setup.sh")
     Pi0 = None
 
+try:
+    from .molmoact2 import MolmoAct2
+except ImportError:
+    logger.debug("MolmoAct2 not available. Install deps via scripts/setup/vla/molmoact2_setup.sh")
+    MolmoAct2 = None
+
+
 __all__ = [
     "GearSonic",
     "GearSonicPlanner",
     "PolicyInterface",
 ]
 
-__policies__ = ["SmolVLA", "Pi0", "Dummy", "GearSonic", "GearSonicPlanner"]
+__policies__ = ["SmolVLA", "Pi0", "MolmoAct2", "Dummy", "GearSonic", "GearSonicPlanner"]
