@@ -3,6 +3,8 @@
 
 from pathlib import Path
 
+from loguru import logger
+
 try:
     import torch
     from lerobot.configs.policies import PreTrainedConfig
@@ -58,6 +60,17 @@ class SmolVLA(Policy):
 
         if self.libero:
             self.libero_preprocessor = PolicyProcessorPipeline(steps=[LiberoProcessorStep()])
+
+    # TODO: Need to verify this works for this policy since it was copied from policy_inference.py during abstraction
+    def create_obs(env):
+        logger.warning("The create_obs function has not yet been verified for smolvla, it may require changes")
+        formatted_obs = {}
+        state = env.get_state()
+        for key in state.observation.cameras:
+            formatted_obs[key] = state.observation.cameras[key].rgb
+        formatted_obs["proprio_joints"] = state.observation.proprio_joints
+        formatted_obs["gripper_position"] = state.observation.gripper_position
+        return formatted_obs
 
     def set_instruction(self, instruction):
         self.instruction = instruction

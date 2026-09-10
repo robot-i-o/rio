@@ -9,21 +9,14 @@ from rio_hw import time
 from rio_hw.middleware import ServerManager
 
 from rio.envs.env import make_env
-
-
-# TODO: this should be moved into each individual policy
-def create_obs(env):
-    formatted_obs = {}
-    state = env.get_state()
-    for key in state.observation.cameras:
-        formatted_obs[key] = state.observation.cameras[key].rgb
-    formatted_obs["proprio_joints"] = state.observation.proprio_joints
-    formatted_obs["gripper_position"] = state.observation.gripper_position
-    return formatted_obs
+from rio.envs.factory import get_policy_class
 
 
 def policy_loop(args, env, policy, visualizer=None):
-    assert env.robot.arm.robot_controller.name == "JOINT_VEL"
+    # create_obs is the policy's own, but it reads the local env, so it runs here rather
+    # than in the policy node's process
+    create_obs = get_policy_class(args.policy).create_obs
+
     if visualizer:
         visualizer.set_robot_model("world/robot", robot_description=env.robot.urdf_path, variant=None)
     input("Press Enter to start policy inference loop...")
@@ -35,6 +28,9 @@ def policy_loop(args, env, policy, visualizer=None):
         t_start = time.now()
         it = 0
 
+        # Extra configuration options
+        alpha = float(getattr(args, "action_alpha", 1.0) or 1.0)  # alpha controls how much the action to actually execute
+
         # create first action chunk
         action_chunk = []
         action_chunk_idx = args.policy_node_cfg.chunk_size  # force request on first iteration
@@ -42,6 +38,10 @@ def policy_loop(args, env, policy, visualizer=None):
         processing_obs = False
         env.set_start_time(t_start)
         env.set_instruction(args.instruction)
+
+        # Arm starts from where it currently is
+        commanded = np.asarray(env.get_state().observation.proprio, dtype=np.float32).copy()
+        logger.info(f"ramp starts at proprio: {commanded}")
 
         recording = False
         chunk_counter = 0
@@ -76,9 +76,13 @@ def policy_loop(args, env, policy, visualizer=None):
                     # If action within current chunk, send command to environment
                     if action_chunk_idx < len(action_chunk):
                         action = action_chunk[action_chunk_idx]
+
+                        # Interpolate the action based on the alpha value from above
+                        commanded = commanded + alpha * (np.asarray(action, dtype=np.float32) - commanded)
+
                         _t_cmd_target = t_cmd_target + args.arm_latency
                         env.move(
-                            action,
+                            commanded,
                             t_cmd_target=_t_cmd_target,
                         )
                         action_chunk_idx += 1

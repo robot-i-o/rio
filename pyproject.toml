@@ -21,7 +21,6 @@ classifiers = [
 dynamic = ["version", "readme"]
 requires-python = ">=3.10"
 
-#TODO: change git reference to main.
 dependencies = [
     "loguru>=0.7.3",
     "rio_hw[all] @ git+https://github.com/robot-i-o/rio-hw.git@main",

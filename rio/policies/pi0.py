@@ -64,6 +64,15 @@ class Pi0(Policy):
         self._warm_start()
         self.ready = True
 
+    def create_obs(env):
+        formatted_obs = {}
+        state = env.get_state()
+        for key in state.observation.cameras:
+            formatted_obs[key] = state.observation.cameras[key].rgb
+        formatted_obs["proprio_joints"] = state.observation.proprio_joints
+        formatted_obs["gripper_position"] = state.observation.gripper_position
+        return formatted_obs
+
     def set_instruction(self, instruction):
         self.instruction = instruction
 
