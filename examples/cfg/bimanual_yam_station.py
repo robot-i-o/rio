@@ -17,6 +17,7 @@ class BimanualYamStation:
             gripper_type="linear_4310",
             zero_gravity_mode=False,
             freq=50,
+            enable_auto_recovery=True,
         )
     )
 
@@ -28,6 +29,7 @@ class BimanualYamStation:
             gripper_type="linear_4310",
             zero_gravity_mode=False,
             freq=50,
+            enable_auto_recovery=True,
         )
     )
 
@@ -44,6 +46,7 @@ class BimanualYamStation:
             gripper_type="yam_teaching_handle",
             zero_gravity_mode=True,
             freq=50,
+            enable_auto_recovery=True,
         )
     )
 
@@ -55,6 +58,7 @@ class BimanualYamStation:
             gripper_type="yam_teaching_handle",
             zero_gravity_mode=True,
             freq=50,
+            enable_auto_recovery=True,
         )
     )
 

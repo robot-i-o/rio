@@ -4,6 +4,7 @@ import numpy as np
 
 from examples import get_station_cfg
 from rio.cfg.common import VisualizerCfg
+from rio.schema import ActionSpace
 
 _Base = get_station_cfg()
 
@@ -34,6 +35,8 @@ class MolmoAct2Cfg(_Base):
         max_buffer_size: int = 30
         chunk_request_threshold: float = 0.1
         camera_keys: list[str] = field(default_factory=lambda: ["camera_1", "camera_2", "camera_3"])
+        action_space: str | None = None
+        required_action_space: str = "joint_pos"
 
         def __post_init__(self):
             if self.resolutions is None:
@@ -74,8 +77,6 @@ class MolmoAct2Cfg(_Base):
     arm_latency: float = 0.0
     gripper_latency: float = 0.1
 
-    action_space: str = "joint_pos"
-
     mw: str = "Thread"
     mp_method: str | None = "spawn"
     freq: int = 50
@@ -92,8 +93,9 @@ class MolmoAct2Cfg(_Base):
         self.policy_cfg.policy_path = self.policy_path
         self.policy_cfg.norm_tag = self.norm_tag
         self.policy_node_cfg.instruction = self.instruction
+        self.policy_node_cfg.action_space = self.action_space
 
-        if self.action_space not in ["joint_pos", "joint_vel", "ee_vel"]:
+        if self.action_space.upper() not in ActionSpace.__members__:
             raise ValueError(f"Invalid action_space: {self.action_space}")
 
         if self.arm_cfg is not None:

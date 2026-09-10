@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from examples.policy_cfgs.molmoact2 import MolmoAct2Cfg
+from rio.schema import ActionSpace
 
 YAM_DUAL_DIM = 14
 YAM_DUAL_HORIZON = 30
@@ -60,8 +61,6 @@ class MolmoAct2BimanualYamCfg(MolmoAct2Cfg):
     policy_node_cfg: PolicyInterfaceConfig = field(default_factory=lambda: MolmoAct2BimanualYamCfg.PolicyInterfaceConfig())
     policy_cfg: PolicyConfig = field(default_factory=lambda: MolmoAct2BimanualYamCfg.PolicyConfig())
 
-    action_space: str = "joint_pos"
-
     def __post_init__(self):
         if not self.policy_path:
             raise ValueError("policy_path is required — set MolmoAct2BimanualYamCfg.policy_path or pass --policy-path")
@@ -71,8 +70,9 @@ class MolmoAct2BimanualYamCfg(MolmoAct2Cfg):
         self.policy_cfg.policy_path = self.policy_path
         self.policy_cfg.norm_tag = self.norm_tag
         self.policy_node_cfg.instruction = self.instruction
+        self.policy_node_cfg.action_space = self.action_space
 
-        if self.action_space not in ["joint_pos"]:
+        if self.action_space.upper() not in ActionSpace.__members__:
             raise ValueError(f"Invalid action_space: {self.action_space}")
 
         for name in ["arm1_cfg", "arm2_cfg"]:

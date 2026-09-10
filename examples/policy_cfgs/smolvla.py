@@ -9,6 +9,7 @@ import numpy as np
 
 from examples import get_station_cfg
 from rio.cfg.common import VisualizerCfg
+from rio.schema import ActionSpace
 
 _Base = get_station_cfg()
 
@@ -36,6 +37,8 @@ class SmolVLACfg(_Base):
         freq: int = 50
         max_buffer_size: int = 30
         chunk_request_threshold: float = 0.1  # request new chunk when this fraction of current chunk is consumed
+        action_space: str | None = None
+        required_action_space: str = "joint_pos"
         camera_keys: list[str] = field(default_factory=lambda: ["camera_1", "camera_2"])
 
         def __post_init__(self):
@@ -64,8 +67,6 @@ class SmolVLACfg(_Base):
     arm_latency: float = 0.0
     gripper_latency: float = 0.1
 
-    action_space: str = "joint_pos"
-
     mw: str = "Thread"
     mp_method: str | None = "spawn"
     freq: int = 50
@@ -79,8 +80,9 @@ class SmolVLACfg(_Base):
 
         self.policy_cfg.policy_path = self.policy_path
         self.policy_node_cfg.instruction = self.instruction
+        self.policy_node_cfg.action_space = self.action_space
 
-        if self.action_space not in ["joint_pos", "joint_vel", "ee_vel"]:
+        if self.action_space.upper() not in ActionSpace.__members__:
             raise ValueError(f"Invalid action_space: {self.action_space}")
 
         if self.arm_cfg is not None:

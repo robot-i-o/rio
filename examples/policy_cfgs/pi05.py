@@ -13,6 +13,7 @@ import numpy as np
 
 from examples import get_station_cfg
 from rio.cfg.common import VisualizerCfg
+from rio.schema import ActionSpace
 
 _Base = get_station_cfg()
 
@@ -51,6 +52,8 @@ class Pi05Cfg(_Base):
         freq: int = 200
         max_buffer_size: int = 30
         chunk_request_threshold: float = 0.1
+        action_space: str | None = None
+        required_action_space: str = "joint_vel"
         camera_keys: list[str] = field(default_factory=lambda: ["camera_1", "camera_2", "camera_3"])
 
         def __post_init__(self):
@@ -99,8 +102,6 @@ class Pi05Cfg(_Base):
     arm_latency: float = 0.0
     gripper_latency: float = 0.1
 
-    action_space: str = "joint_vel"
-
     mw: str = "Thread"
     mp_method: str | None = "spawn"
     freq: int = 50
@@ -121,8 +122,9 @@ class Pi05Cfg(_Base):
             data=dataclasses.replace(data, assets=dataclasses.replace(data.assets, asset_id=self.asset_id)),
         )
         self.policy_node_cfg.instruction = self.instruction
+        self.policy_node_cfg.action_space = self.action_space
 
-        if self.action_space not in ["joint_pos", "joint_vel", "ee_vel"]:
+        if self.action_space.upper() not in ActionSpace.__members__:
             raise ValueError(f"Invalid action_space: {self.action_space}")
 
         if self.arm_cfg is not None:

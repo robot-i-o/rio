@@ -16,7 +16,7 @@ def policy_loop(args, env, policy, visualizer=None):
     # create_obs is the policy's own, but it reads the local env, so it runs here rather
     # than in the policy node's process
     create_obs = get_policy_class(args.policy).create_obs
-    logger.warning(f"CAUTION: Action space set to: {env.action_space}")
+
     if visualizer:
         visualizer.set_robot_model("world/robot", robot_description=env.robot.urdf_path, variant=None)
     input("Press Enter to start policy inference loop...")
