@@ -8,6 +8,8 @@ The following example demonstrates the tuning of `allenai/MolmoAct2-BimanualYAM`
 MolmoAct2 trains on LeRobot v3.0, which conflicts with the `lerobot` version the project venv pins for pi0. There are two setup scripts, and they do not overlap: `molmoact2_setup.sh` installs inference and deployment into the project venv, and `molmoact2_train_setup.sh` builds `.venv-molmoact2-train` for conversion and training. The split is not optional — the vendored LeRobot fork uses PEP 695 syntax, so it needs Python 3.12, while rio's camera stack pins a pyrealsense2 with no wheel past 3.11.
 
 ```bash
+# The trainer's torchcodec preflight shells out to ffmpeg, which is a system package.
+sudo apt install ffmpeg
 bash scripts/setup/vla/molmoact2_train_setup.sh
 
 export LEROBOT_DATA_ROOT=$HOME/lerobot_data
@@ -33,7 +35,7 @@ Next, convert the collected robodm data to LeRobot format using the `examples/da
 
 This maps `overhead` onto the checkpoint's `top` view, resamples onto the 30 fps grid it was pretrained at, and writes the `q01`/`q99` statistics that `--norm_mode=q01_q99` reads. The dataset stays local, so `--repo-id` is just a name. Use `--limit-episodes 2` for a smoke run, `--clean` to overwrite, and `--task-mode per_arm` to name the moving arm in the instruction.
 
-> Note: The quantile statistics pass decodes every episode again, at roughly a minute each on top of the conversion itself.
+> Note: LeRobot computes the quantiles as each episode is saved, so there is no second pass. They land in `meta/stats.json`.
 
 Then verify the dataset before training on it:
 

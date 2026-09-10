@@ -77,6 +77,13 @@ if CODEBASE_VERSION != "v3.0":
 sys.path.insert(0, "third_party/molmoact2/experiments")
 from launch_scripts import train_lerobot  # noqa: F401
 
+# The trainer's torchcodec preflight shells out to ffmpeg before it touches the data, so a
+# missing binary stops a run several minutes in. It is a system package, not a wheel.
+import shutil
+
+if shutil.which("ffmpeg") is None:
+    sys.exit("ffmpeg is not on PATH; the trainer's torchcodec preflight needs it (apt install ffmpeg)")
+
 print(f"trainer imports, LeRobot dataset format {CODEBASE_VERSION}")
 PYEOF
 
