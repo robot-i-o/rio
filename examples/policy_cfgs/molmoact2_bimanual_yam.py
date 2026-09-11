@@ -32,7 +32,7 @@ class MolmoAct2BimanualYamCfg(MolmoAct2Cfg):
 
     # Fraction of the way from the current pose to the chunk's target to command each tick.
     # The wrist cameras are inside the feedback path, so a full-rate command oscillates.
-    action_alpha: float = 0.3
+    action_alpha: float = 1.0
 
     def obs_transforms(obs, prompt=None):
         transformed = dict(obs)

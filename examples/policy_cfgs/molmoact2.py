@@ -79,7 +79,7 @@ class MolmoAct2Cfg(_Base):
 
     mw: str = "Thread"
     mp_method: str | None = "spawn"
-    freq: int = 50
+    freq: int = 30
 
     visualizer: str | None = None
     visualizer_cfg: VisualizerCfg = field(default_factory=VisualizerCfg)

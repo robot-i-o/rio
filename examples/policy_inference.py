@@ -30,6 +30,7 @@ def policy_loop(args, env, policy, visualizer=None):
 
         # Extra configuration options
         alpha = float(getattr(args, "action_alpha", 1.0) or 1.0)  # alpha controls how much the action to actually execute
+		assert 0 < alpha < 1.0, f"Alpha must be between 0 and 1 (strictly). Got: {alpha}"
 
         # create first action chunk
         action_chunk = []
@@ -65,27 +66,27 @@ def policy_loop(args, env, policy, visualizer=None):
                         processing_obs = True
                         chunk_counter += 1
 
-                    # Get policy response
-                    response = policy.get_action_chunk()
-                    if response["ready"]:
-                        action_chunk = response["actions"]
-                        chunk_start = response["timestamp"]
-                        action_chunk_idx = int((t_cycle_end - chunk_start) * freq)
-                        processing_obs = False
+				# Get policy response
+				response = policy.get_action_chunk()
+				if response["ready"]:
+					action_chunk = response["actions"]
+					chunk_start = response["timestamp"]
+					action_chunk_idx = int((t_cycle_end - chunk_start) * freq)
+					processing_obs = False
 
-                    # If action within current chunk, send command to environment
-                    if action_chunk_idx < len(action_chunk):
-                        action = action_chunk[action_chunk_idx]
+				# If action within current chunk, send command to environment
+				if action_chunk_idx < len(action_chunk):
+					action = action_chunk[action_chunk_idx]
 
-                        # Interpolate the action based on the alpha value from above
-                        commanded = commanded + alpha * (np.asarray(action, dtype=np.float32) - commanded)
+					# Interpolate the action based on the alpha value from above
+					commanded = commanded + alpha * (np.asarray(action, dtype=np.float32) - commanded)
 
-                        _t_cmd_target = t_cmd_target + args.arm_latency
-                        env.move(
-                            commanded,
-                            t_cmd_target=_t_cmd_target,
-                        )
-                        action_chunk_idx += 1
+					_t_cmd_target = t_cmd_target + args.arm_latency
+					env.move(
+						commanded,
+						t_cmd_target=_t_cmd_target,
+					)
+					action_chunk_idx += 1
 
                 step = env.get_state(action=action)
 
