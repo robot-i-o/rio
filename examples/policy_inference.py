@@ -30,7 +30,7 @@ def policy_loop(args, env, policy, visualizer=None):
 
         # Extra configuration options
         alpha = float(getattr(args, "action_alpha", 1.0) or 1.0)  # alpha controls how much the action to actually execute
-		assert 0 < alpha < 1.0, f"Alpha must be between 0 and 1 (strictly). Got: {alpha}"
+		assert 0 <= alpha <= 1.0, f"Alpha must be between 0 and 1 (strictly). Got: {alpha}"
 
         # create first action chunk
         action_chunk = []
