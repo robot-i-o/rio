@@ -10,12 +10,21 @@ from loguru import logger
 
 from ._policy import Policy
 
-# The MolmoAct2 stack is vendored rather than installed, so the vendored `olmo` and
-# LeRobot are put on the path ahead of any installed copy, as serve_policy.py does.
+# The MolmoAct2 stack is vendored rather than installed, under this directory.
 _EXPERIMENTS = Path(__file__).resolve().parents[2] / "third_party" / "molmoact2" / "experiments"
-for _candidate in (_EXPERIMENTS, _EXPERIMENTS / "lerobot" / "src"):
-    if _candidate.is_dir() and str(_candidate) not in sys.path:
-        sys.path.insert(0, str(_candidate))
+
+
+def _add_vendored_to_path():
+    """Put the vendored `olmo` and LeRobot ahead of any installed copy on `sys.path`.
+
+    Called immediately before importing them, never at module import. Doing it at import
+    time would change which `lerobot` the whole process resolves as a side effect of
+    importing this module, which silently affects unrelated code that expects the
+    installed package (or expects the import to fail).
+    """
+    for candidate in (_EXPERIMENTS, _EXPERIMENTS / "lerobot" / "src"):
+        if candidate.is_dir() and str(candidate) not in sys.path:
+            sys.path.insert(0, str(candidate))
 
 try:
     import torch
@@ -113,6 +122,7 @@ class MolmoAct2(Policy):
         return checkpoint_dir.is_dir() and (checkpoint_dir / "config.yaml").exists()
 
     def _construct_native(self):
+        _add_vendored_to_path()
         try:
             from lerobot.policies.molmoact2.configuration_molmoact2 import MolmoAct2Config  # noqa: PLC0415
             from lerobot.policies.molmoact2.modeling_molmoact2 import MolmoAct2Policy  # noqa: PLC0415
