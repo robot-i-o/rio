@@ -23,8 +23,7 @@ requires-python = ">=3.10"
 
 dependencies = [
     "loguru>=0.7.3",
-    # "rio_hw[all] @ git+https://github.com/robot-i-o/rio-hw.git@main",
-    "rio_hw[all]",
+    "rio_hw[all] @ git+https://github.com/robot-i-o/rio-hw.git@main",
     "robodm>=0.1.0",
     "av<=13.1.0",    # required by robodm for proper encoding/decoding
 ]
@@ -48,9 +47,6 @@ docs = [
     "mkdocs-autorefs",
     "mkdocs-multirepo-plugin @ git+https://github.com/etaoxing/mkdocs-multirepo-plugin.git@fb846d34672fd7f86ad5ba680566817a9ea7fb25",
 ]
-
-[tool.uv.sources]
-rio_hw = { path = "/home/riley/rio-hw-dev", editable = true }
 
 # This removes version constraints from transitive dependencies
 [tool.uv]
