@@ -14,7 +14,7 @@ class BimanualYamStation:
             "overhead": Camera(
                 addr="127.0.0.1:5130",
                 cam_type="Realsense",
-                serial="346522060488",
+                serial="346522060488", # you will need to replace this with your camera's serial number
                 model="D400",
                 enable_depth=False,
                 resolution=(480, 640),
@@ -24,7 +24,7 @@ class BimanualYamStation:
             "left": Camera(
                 addr="127.0.0.1:5130",
                 cam_type="Realsense",
-                serial="352122272365",
+                serial="352122272365", # you will need to replace this with your camera's serial number
                 model="D400",
                 enable_depth=False,
                 resolution=(480, 640),
@@ -34,7 +34,7 @@ class BimanualYamStation:
             "right": Camera(
                 addr="127.0.0.1:5130",
                 cam_type="Realsense",
-                serial="352122273371",
+                serial="352122273371", # you will need to replace this with your camera's serial number
                 model="D400",
                 enable_depth=False,
                 resolution=(480, 640),
