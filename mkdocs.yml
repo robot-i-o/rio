@@ -104,12 +104,14 @@ nav:
       - Station Configuration: workflow/station_cfg.md
     - Collect Data:
       - Collect Demonstrations: workflow/data-collection.md
+      - Button Control: workflow/buttons.md
       - Visualize Data: workflow/rerun.md
     - Convert Data:
       - Convert to DROID: workflow/data-export.md
     - Policy Training:
       - Setup: workflow/pi0_setup.md
       - Pi0.5 DROID Fine-tuning: workflow/pi0_droid_finetuning.md
+      - MolmoAct2 Fine-tuning: workflow/molmoact2_finetuning.md
     - Deploy:
       - Policy Inference: workflow/deploy.md
 

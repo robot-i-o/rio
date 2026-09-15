@@ -7,6 +7,7 @@ from loguru import logger
 from rio_hw import time
 from rio_hw.middleware import ServerManager
 
+from rio.control import ButtonPoller, Command, RecordingSession, optional_buttons, resolve_bindings
 from rio.envs.env import make_env
 
 
@@ -33,7 +34,13 @@ def check_alignment(teleop_joints, robot_joints, max_joint_delta=0.8):
     print(f"\n✓ Alignment OK (max delta: {np.rad2deg(max_delta):.1f}°)")
 
 
-def teleop_leader_follower(args, env, teleop, teleop2=None, teleop_keyboard=None, visualizer=None):
+DEFAULT_BINDINGS = {
+    "a": Command.TOGGLE_EPISODE,
+    "c": Command.DISCARD_LAST,
+}
+
+
+def teleop_leader_follower(args, env, teleop, teleop2=None, buttons=None, visualizer=None):
     """Unified leader-follower teleoperation loop for single or bimanual arms."""
     primary_arm = getattr(env.robot, "arm", None) or getattr(env.robot, "arm1", None)
     arm_target_joint_q = primary_arm.get_state()["joint_q"].copy() if primary_arm else None
@@ -46,7 +53,17 @@ def teleop_leader_follower(args, env, teleop, teleop2=None, teleop_keyboard=None
         print("Checking leader alignment...")
         check_alignment(teleop.get_state()["joint_q"], arm_target_joint_q)
 
-    input(f"Instruction: {args.instruction}\nPress Enter to start")
+    session = RecordingSession(env.recorder)
+    poller = ButtonPoller(buttons, resolve_bindings(args, DEFAULT_BINDINGS, "button_bindings"))
+
+    if buttons is not None:
+        print(f"\nInstruction: {args.instruction}")
+        print("Teleoperation is live. Use the buttons to control recording; Ctrl-C to exit.")
+    else:
+        # Without buttons there is nothing to start or stop an episode, so record the
+        # whole session as one trajectory and save it on exit.
+        input(f"Instruction: {args.instruction}\nPress Enter to start")
+        session.handle(Command.TOGGLE_EPISODE)
     time.sleep(getattr(args, "startup_delay", 0.0))
 
     freq = args.freq
@@ -56,7 +73,6 @@ def teleop_leader_follower(args, env, teleop, teleop2=None, teleop_keyboard=None
     it = 0
     env.set_start_time(t_start)
     env.set_instruction(args.instruction)
-    key_pressed = None
 
     try:
         while True:
@@ -66,24 +82,10 @@ def teleop_leader_follower(args, env, teleop, teleop2=None, teleop_keyboard=None
 
             time.precise_wait(t_sample)
 
-            # Read keyboard input for recording control
-            if teleop_keyboard:
-                keyboard_state = teleop_keyboard.get_state()
-                key_pressed = keyboard_state["alphanumeric_state"][0]
-
-            # Handle recorder lifecycle via keyboard
-            if env.recorder and teleop_keyboard and key_pressed is not None:
-                recorder_state = env.recorder.get_state()
-                is_saving = recorder_state.get("is_saving", False)
-                is_closed = recorder_state.get("is_closed", False)
-                if chr(key_pressed) == "n" and is_closed:
-                    env.recorder.new_trajectory(wait=False)
-                    print("\n ============================================= ")
-                    logger.info("Started new trajectory recording")
-                elif chr(key_pressed) == "s" and not is_saving:
-                    env.recorder.save(wait=False)
-                    logger.info("Saved trajectory recording")
-                    print("============================================= \n")
+            # Apply operator commands from the physical buttons
+            for command in poller.poll():
+                session.handle(command)
+            session.refresh()
 
             # Skip control while recorder is actively saving
             if env.recorder and env.recorder.get_state().get("is_saving", False):
@@ -117,8 +119,7 @@ def teleop_leader_follower(args, env, teleop, teleop2=None, teleop_keyboard=None
 
             step = env.get_state(action=action)
 
-            if env.recorder:
-                env.recorder.record_step(step)
+            session.record_step(step)
             if visualizer:
                 visualizer.log_env_state("env", step)
 
@@ -128,8 +129,7 @@ def teleop_leader_follower(args, env, teleop, teleop2=None, teleop_keyboard=None
     except KeyboardInterrupt:
         pass
     finally:
-        if env.recorder:
-            env.recorder.save(wait=True)
+        session.close()
 
 
 def main(args):
@@ -151,7 +151,7 @@ def main(args):
             env,
             clients["teleop"]() as teleop,
             (clients.get("teleop2") or (lambda: nullcontext()))() as teleop2,
-            (clients.get("teleop_keyboard") or (lambda: nullcontext()))() as teleop_keyboard,
+            optional_buttons(clients.get("buttons")) as buttons,
             (clients.get("visualizer") or (lambda: nullcontext()))() as visualizer,
         ):
             try:
@@ -160,7 +160,7 @@ def main(args):
                     env,
                     teleop,
                     teleop2=teleop2,
-                    teleop_keyboard=teleop_keyboard,
+                    buttons=buttons,
                     visualizer=visualizer,
                 )
             except KeyboardInterrupt:

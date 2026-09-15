@@ -48,7 +48,6 @@ docs = [
     "mkdocs-multirepo-plugin @ git+https://github.com/etaoxing/mkdocs-multirepo-plugin.git@fb846d34672fd7f86ad5ba680566817a9ea7fb25",
 ]
 
-
 # This removes version constraints from transitive dependencies
 [tool.uv]
 override-dependencies = ["numpy", "rerun-sdk", "av<=13.1.0"]
