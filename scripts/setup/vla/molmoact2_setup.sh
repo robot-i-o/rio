@@ -39,7 +39,7 @@ uv pip install \
     "accelerate" \
 	"omegaconf" \
 	"cached_path" \
-	"torchmetrcis" \
+	"torchmetrics" \
 	"datasets" \
 	"decord" \
 
