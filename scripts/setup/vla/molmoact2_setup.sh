@@ -36,7 +36,12 @@ uv pip install \
     "einops" \
     "pillow" \
     "huggingface_hub" \
-    "accelerate"
+    "accelerate" \
+	"omegaconf" \
+	"cached_path" \
+	"torchmetrcis" \
+	"datasets" \
+	"decord" \
 
 "${VIRTUAL_ENV:-.venv}/bin/python" - <<'PYEOF'
 import sys

@@ -79,7 +79,8 @@ Unlike openpi there is no separate norm-stats script; the statistics are read fr
 2. Exporting the final checkpoint:
 
 ```bash
-python -m third_party.molmoact2.experiments.olmo.hf_model.convert_molmoact2_to_hf /location/to/checkpoint/step4000-merged /location/to/save/exported/checkpoint
+cd third_party/molmoact2/experiments &&
+python -m olmo.hf_model.convert_molmoact2_to_hf /location/to/checkpoint/step4000-merged /location/to/save/exported/checkpoint/step4000-hf/
 # Note: LoRA runs save four directories per step, convert the *-merged one
 ```
 
