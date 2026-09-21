@@ -68,6 +68,7 @@ class Recorder(Node):
         "save",
         "get_state",
         "new_trajectory",
+        "discard_last",
         "ready",
         "set_reward",
         "set_final_reward",
@@ -111,6 +112,7 @@ class Recorder(Node):
 
         self.is_closed = False
         self.is_saving = False
+        self.last_saved_path = None
 
         super().__init__(freq=freq, max_buffer_size=max_buffer_size, max_queue_size=max_queue_size, **kwargs)
         logger.info(f"Recorder initialized with path: {self.base_path} and freq: {self.freq} Hz")
@@ -319,6 +321,8 @@ class Recorder(Node):
                             self._save_stats()
                         else:
                             logger.debug("log_stats=False, ignoring set_final_reward")
+                    elif req_type == "discard_last":
+                        self._discard_last()
                     elif req_type == "new_trajectory":
                         if self.is_closed:
                             self._new_trajectory(req.get("path"))
@@ -354,9 +358,33 @@ class Recorder(Node):
         }
         self.ring_buffer.put(status, wait=False)
 
+    def _status(self, timeout: float = 5.0) -> dict[str, Any]:
+        """Read the published status, waiting for the node's first publish.
+
+        The ring buffer yields an empty list until the node publishes, so callers that
+        run immediately after connecting would otherwise see a list instead of a status
+        dict. This is reachable whenever `start_recording=False`.
+
+        Args:
+            timeout: Seconds to wait for the first status publish.
+
+        Returns:
+            The status dict, or an idle-looking status if the wait times out.
+        """
+        start_time = time.now()
+        rate = time.Rate(self.freq)
+        while True:
+            status = self.ring_buffer.get()
+            if isinstance(status, dict):
+                return status
+            if time.now() - start_time > timeout:
+                logger.warning("Timed out waiting for recorder status; assuming idle.")
+                return {"is_closed": True, "is_saving": False}
+            rate.sleep()
+
     def get_state(self):
         """Get recorder status."""
-        return self.ring_buffer.get()
+        return self._status()
 
     def _record(self, state: dict[str, Any], timestamp: float | None = None):
         """Internal method to record a state dictionary synchronously."""
@@ -387,12 +415,47 @@ class Recorder(Node):
                 self.datamanager.close()
                 logger.info(f"Recorder saved trajectory to {self.path}")
 
+                self.last_saved_path = self.path
                 self.is_closed = True
                 self.is_saving = False
                 self._put_status()
 
             except Exception as e:
                 logger.error(f"Error saving recorder: {e}")
+
+    def _discard_last(self):
+        """
+        Internal method to delete the most recently saved trajectory from disk.
+        """
+        if self.is_saving:
+            logger.warning("Cannot discard while saving the current trajectory.")
+            return
+
+        if not self.is_closed:
+            logger.warning("Cannot discard while recording. Save the current trajectory first.")
+            return
+
+        if self.last_saved_path is None:
+            logger.warning("No saved trajectory to discard.")
+            return
+
+        discarded = self.last_saved_path
+        try:
+            if os.path.exists(discarded):
+                os.remove(discarded)
+                logger.warning(f"Discarded trajectory {discarded}")
+            else:
+                logger.warning(f"Trajectory {discarded} no longer exists on disk.")
+
+            stats_path = discarded[:-4] + "_stats.json"
+            if os.path.exists(stats_path):
+                os.remove(stats_path)
+
+            # Reuse the freed index for the next trajectory.
+            self.traj_index = max(self.traj_index - 1, -1)
+            self.last_saved_path = None
+        except OSError as e:
+            logger.error(f"Error discarding trajectory {discarded}: {e}")
 
     def _new_trajectory(self, path: str | None = None):
         """
@@ -471,13 +534,13 @@ class Recorder(Node):
             rate = time.Rate(self.freq)
 
             # Wait for saving to begin
-            while not self.ring_buffer.get().get("is_saving", False):
-                if self.ring_buffer.get().get("is_closed", False):
+            while not self._status().get("is_saving", False):
+                if self._status().get("is_closed", False):
                     return
                 rate.sleep()
 
             # Wait for saving to complete
-            while self.ring_buffer.get().get("is_saving", False):
+            while self._status().get("is_saving", False):
                 if timeout is not None and time.now() - start_time > timeout:
                     logger.warning("Timeout waiting for recorder to finish saving")
                     return
@@ -489,7 +552,7 @@ class Recorder(Node):
         """
         Start a new trajectory in the same recorder instance.
         """
-        if not self.ring_buffer.get().get("is_closed", False):
+        if not self._status().get("is_closed", True):
             raise RuntimeError("Cannot start a new trajectory before saving the current one.")
 
         req = {
@@ -497,20 +560,30 @@ class Recorder(Node):
             "path": path,
         }
         self.request_queue.put(req)
-        logger.info(f"Started new trajectory at {self.path}")
+        # The resolved path lives on the node, which logs it once the request is served.
+        logger.info("Requested a new trajectory.")
 
         if wait:
             start_time = time.now()
             rate = time.Rate(self.freq)
-            while self.ring_buffer.get().get("is_closed", False):
+            while self._status().get("is_closed", False):
                 if timeout is not None:
                     if time.now() - start_time > timeout:
                         logger.warning("Timeout while waiting for recorder to start new trajectory")
                         break
                 rate.sleep()
 
+    def discard_last(self):
+        """
+        Delete the most recently saved trajectory file.
+
+        Intended for discarding a demonstration that went wrong. Has no effect while a
+        recording is in progress or while a save is running.
+        """
+        self.request_queue.put({"type": "discard_last"})
+
     def ready(self):
-        status = self.ring_buffer.get()
+        status = self._status()
         return not status.get("is_saving", False) and not status.get("is_closed", True)
 
     def set_reward(self, reward: float):

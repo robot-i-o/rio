@@ -12,6 +12,10 @@ class Policy(Protocol):
     def construct_policy(self):
         raise NotImplementedError("Policy construct_policy not implemented yet")
 
+    @staticmethod
+    def create_obs(env):
+        raise NotImplementedError("Policy create_obs not implemented yet")
+
     def set_instruction(self, instruction):
         raise NotImplementedError("Policy set_instruction not implemented yet")
 

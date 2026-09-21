@@ -240,3 +240,77 @@ def test_recorder_loader_roundtrip(temp_trajectory_path, middleware, freq, durat
     logger.info("All steps verified successfully!")
 
     # TODO: Implement loader verification logic
+
+
+def test_discard_last_removes_trajectory(tmp_path):
+    """A saved trajectory can be discarded, and its index reused by the next one."""
+    middleware = "Thread"
+    recorder_cfg = {
+        "path": str(tmp_path),
+        "freq": 100,
+        "video_codec": "rawvideo",
+        "start_recording": False,
+    }
+    recorder_server, recorder_client = make_node(middleware, "data", "Recorder", recorder_cfg, package="rio")
+
+    with ServerManager(middleware, [recorder_server]):
+        with recorder_client() as recorder:
+            # First episode, kept.
+            recorder.new_trajectory(wait=True)
+            for i in range(5):
+                recorder.record_step(create_dummy_step(timestep=i))
+            recorder.save(wait=True, timeout=None)
+
+            # Second episode, discarded.
+            recorder.new_trajectory(wait=True)
+            for i in range(5):
+                recorder.record_step(create_dummy_step(timestep=i))
+            recorder.save(wait=True, timeout=None)
+
+            saved = sorted(f for f in os.listdir(tmp_path) if f.endswith(".vla"))
+            assert len(saved) == 2, saved
+            doomed = saved[-1]
+
+            recorder.discard_last()
+            time.sleep(0.5)
+
+            remaining = sorted(f for f in os.listdir(tmp_path) if f.endswith(".vla"))
+            assert doomed not in remaining
+            assert len(remaining) == 1, remaining
+
+            # The freed index is reused rather than leaving a gap in the numbering.
+            recorder.new_trajectory(wait=True)
+            for i in range(5):
+                recorder.record_step(create_dummy_step(timestep=i))
+            recorder.save(wait=True, timeout=None)
+
+            final = sorted(f for f in os.listdir(tmp_path) if f.endswith(".vla"))
+            assert final == saved, final
+
+
+def test_discard_last_refused_while_recording(tmp_path):
+    """Discard must not delete anything while an episode is in progress."""
+    middleware = "Thread"
+    recorder_cfg = {
+        "path": str(tmp_path),
+        "freq": 100,
+        "video_codec": "rawvideo",
+        "start_recording": False,
+    }
+    recorder_server, recorder_client = make_node(middleware, "data", "Recorder", recorder_cfg, package="rio")
+
+    with ServerManager(middleware, [recorder_server]):
+        with recorder_client() as recorder:
+            recorder.new_trajectory(wait=True)
+            for i in range(5):
+                recorder.record_step(create_dummy_step(timestep=i))
+            recorder.save(wait=True, timeout=None)
+            kept = sorted(f for f in os.listdir(tmp_path) if f.endswith(".vla"))
+
+            # Start a new episode, then try to discard mid-recording.
+            recorder.new_trajectory(wait=True)
+            recorder.discard_last()
+            time.sleep(0.5)
+
+            assert sorted(f for f in os.listdir(tmp_path) if f.endswith(".vla")) == kept
+            recorder.save(wait=True, timeout=None)

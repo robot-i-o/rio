@@ -51,12 +51,16 @@ def dataclass_to_dict(dc):
     return result
 
 
-def make_policy(policy_name, policy_kwargs):
+def get_policy_class(policy_name):
     module = import_module(f"rio.policies.{policy_name.lower()}")
-    PolicyClass = getattr(module, policy_name)
+    PolicyClass = getattr(module, policy_name, None)
     if PolicyClass is None:
         raise ImportError(policy_name)
-    return PolicyClass(**policy_kwargs)
+    return PolicyClass
+
+
+def make_policy(policy_name, policy_kwargs):
+    return get_policy_class(policy_name)(**policy_kwargs)
 
 
 def make_node(mw, module, node, node_kwargs, package="rio_hw"):
@@ -163,7 +167,7 @@ def instantiate_station_cfg(args, **kwargs) -> tuple[dict, dict, dict]:
             else:
                 cfg_dict = cfg
 
-            module = kwargs.get(module_override_key) or _resolve_module(field_name)
+            module = kwargs.get(module_override_key) or config_fields.get(module_override_key) or _resolve_module(field_name)
             package = _resolve_package(module)
 
         else:

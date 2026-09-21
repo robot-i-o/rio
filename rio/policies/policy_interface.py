@@ -33,6 +33,8 @@ class PolicyInterface(Node):
         max_buffer_size: int = 30,
         chunk_request_threshold: float = 0.75,
         camera_keys: list[str] | None = None,
+        action_space: str | None = None,
+        required_action_space: str | None = None,
     ):
         self.policy = policy
         self.instruction = instruction
@@ -46,6 +48,8 @@ class PolicyInterface(Node):
         self.last_timestamp = time.now()
         self.chunk_request_threshold = chunk_request_threshold
         self.camera_keys = camera_keys
+        self.action_space = action_space
+        self.required_action_space = required_action_space
 
         super().__init__()
 
@@ -57,6 +61,14 @@ class PolicyInterface(Node):
         if self.camera_keys is None:
             logger.warning("camera_keys is None, defaulting to camera_1, camera_2, ...")
             self.camera_keys = [f"camera_{i + 1}" for i in range(len(self.resolutions))]
+
+        # The station commands whatever it is configured for, so a policy that emits something
+        # else drives the arm with numbers it silently misreads
+        if self.action_space is not None and self.required_action_space is not None:
+            if self.action_space.upper() != self.required_action_space.upper():
+                message = f"Station action_space is {self.action_space}, policy needs {self.required_action_space}"
+                logger.error(message)
+                raise ValueError(message)
 
         obs_schema = {"proprio": np.zeros(shape=(self.proprio_dim,), dtype=np.float32)}
         for i, resolution in enumerate(self.resolutions):

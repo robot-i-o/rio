@@ -25,14 +25,19 @@ def dict_to_step(data: dict[str, Any], embodiment_type: EmbodimentType = Embodim
     ObsClass = getattr(module, f"{embodiment_type.name.title().replace('_', '')}Obs")
 
     observation = {}
-    cameras = defaultdict(dict)
+    cameras: defaultdict[str, dict] = defaultdict(dict)
     for k, v in data.items():
-        if k.startswith("observation/") and not k.startswith("observation/cameras/"):
-            observation[k.split("/")[1]] = v
         if k.startswith("observation/cameras/"):
-            cam_name = k.split("/")[2]
-            cam_input = k.split("/")[3]
-            cameras[cam_name][cam_input] = v
+            cam_name, *cam_keys = k[len("observation/cameras/") :].split("/")
+            if not cam_keys:
+                continue
+            # Rebuild nested camera fields, e.g. "meta/depth_units" -> meta={"depth_units": ...}
+            target = cameras[cam_name]
+            for cam_key in cam_keys[:-1]:
+                target = target.setdefault(cam_key, {})
+            target[cam_keys[-1]] = v
+        elif k.startswith("observation/"):
+            observation[k.split("/")[1]] = v
     observation["cameras"] = {name: Camera(**cam_data) for name, cam_data in cameras.items()}
 
     observation = ObsClass(**observation)

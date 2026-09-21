@@ -21,7 +21,6 @@ classifiers = [
 dynamic = ["version", "readme"]
 requires-python = ">=3.10"
 
-#TODO: change git reference to main.
 dependencies = [
     "loguru>=0.7.3",
     "rio_hw[all] @ git+https://github.com/robot-i-o/rio-hw.git@main",
@@ -48,7 +47,6 @@ docs = [
     "mkdocs-autorefs",
     "mkdocs-multirepo-plugin @ git+https://github.com/etaoxing/mkdocs-multirepo-plugin.git@fb846d34672fd7f86ad5ba680566817a9ea7fb25",
 ]
-
 
 # This removes version constraints from transitive dependencies
 [tool.uv]

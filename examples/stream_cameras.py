@@ -29,6 +29,11 @@ def camera_streaming_loop(args, cameras, visualizer):
                     visualizer.log_image(path, rgb)
                 else:
                     logger.warning(f"No RGB frame from camera {cam_name}")
+
+                depth = cam_state.get("depth")
+                if depth is not None and visualizer is not None:
+                    path = f"{LOG_PATH}{cam_name}/depth"
+                    visualizer.log_depth(path, depth, depth_units=cam_state.get("depth_units"))
             time.precise_wait(t_cycle_end)
             it += 1
     except KeyboardInterrupt:
@@ -36,6 +41,8 @@ def camera_streaming_loop(args, cameras, visualizer):
 
 
 def main(args):
+    for cam in args.cameras.values():
+        cam.cfg["enable_depth"] = args.depth
     cam_servers, cam_clients = F.make_cameras(args.mw, args.cameras)
     visualizer_server, visualizer_client = F.make_node(
         args.mw, "visualization", args.visualizer, {**F.asdict(args.visualizer_cfg), "max_queue_size": 100}, package="rio"
@@ -56,6 +63,7 @@ if __name__ == "__main__":
         mw: str = "Thread"
         mp_method: str = "spawn"
         freq: int = 50
+        depth: bool = True
 
         visualizer: str | None = "Rerun"
 
